@@ -8,6 +8,7 @@ import '@fontsource-variable/sora'
 import '@fontsource-variable/inter'
 import '@/styles/globals.css'
 
+import { EnquiryDialog } from '@/components/site/EnquiryDialog'
 import { FloatingActions } from '@/components/site/FloatingActions'
 import { Footer } from '@/components/site/Footer'
 import { Header } from '@/components/site/Header'
@@ -93,6 +94,7 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
           settings={settings}
         />
         <FloatingActions contact={contact} />
+        <EnquiryDialog whatsappHref={contact.whatsappHref} />
         <JsonLd data={organisationLd(settings)} />
         {gaId && (
           <>

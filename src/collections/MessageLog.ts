@@ -4,7 +4,7 @@ import { canRead } from '@/access'
 import { WHATSAPP_PROVIDERS } from '@/lib/catalog'
 
 /**
- * WhatsApp delivery log. Written only by the server (WhatsApp jobs and webhooks in Phase 5),
+ * WhatsApp delivery log. Written only by the server (sending, retries and provider webhooks),
  * so no CMS user can create, edit or delete entries.
  */
 export const MessageLog: CollectionConfig = {
@@ -68,7 +68,22 @@ export const MessageLog: CollectionConfig = {
       ],
     },
     { name: 'attempts', type: 'number', defaultValue: 0 },
+    {
+      name: 'nextAttemptAt',
+      label: 'Next attempt',
+      type: 'date',
+      index: true,
+      admin: { date: { pickerAppearance: 'dayAndTime' } },
+    },
     { name: 'error', type: 'textarea' },
+    {
+      name: 'body',
+      label: 'Message',
+      type: 'textarea',
+      admin: { description: 'Exactly what the recipient sees.' },
+    },
+    { name: 'params', label: 'Template values', type: 'json', admin: { hidden: true } },
+    { name: 'language', type: 'text', admin: { hidden: true } },
     { name: 'deliveredAt', type: 'date' },
     { name: 'readAt', type: 'date' },
   ],

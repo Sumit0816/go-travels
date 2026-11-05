@@ -480,3 +480,15 @@ html[data-theme='dark'] .gta a {
     min-width: 640px;
   }
 }
+
+// WhatsApp Integration: message preview bubble
+.gta-wa {
+  max-width: 420px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #dcf8c6;
+  color: #13222b;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}

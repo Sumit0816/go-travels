@@ -147,7 +147,7 @@ describe('bookings export and resend', () => {
     expect((await call(exportBookingsCsv, 'contentEditor')).status).toBe(403)
   })
 
-  it('re-queues a failed WhatsApp alert and logs it', async () => {
+  it('re-sends a failed WhatsApp alert and logs it', async () => {
     const b = await payload.create({
       collection: 'bookings',
       data: {
@@ -165,13 +165,16 @@ describe('bookings export and resend', () => {
     const res = await call(resendBookingAlert, 'sales', { id: String(b.id) })
     expect(res.status).toBe(200)
     const after = await payload.findByID({ collection: 'bookings', id: b.id })
-    expect(after.whatsappStatus).toBe('queued')
+    // Sent straight away; the outcome depends on this database's WhatsApp settings.
+    expect(['sent', 'queued', 'failed']).toContain(after.whatsappStatus)
+    expect((await res.json()).whatsappStatus).toBe(after.whatsappStatus)
     const logs = await payload.find({
       collection: 'messageLog',
       where: { booking: { equals: b.id } },
     })
     expect(logs.docs.length).toBeGreaterThan(0)
-    expect(logs.docs[0].status).toBe('queued')
+    expect(logs.docs.every((l) => l.kind === 'booking')).toBe(true)
+    expect(logs.docs[0].attempts).toBe(1)
   })
 
   it('stamps confirmedAt when a booking becomes Confirmed', async () => {

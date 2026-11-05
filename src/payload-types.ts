@@ -956,7 +956,22 @@ export interface MessageLog {
   template?: string | null;
   status: 'queued' | 'sent' | 'delivered' | 'read' | 'failed';
   attempts?: number | null;
+  nextAttemptAt?: string | null;
   error?: string | null;
+  /**
+   * Exactly what the recipient sees.
+   */
+  body?: string | null;
+  params?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  language?: string | null;
   deliveredAt?: string | null;
   readAt?: string | null;
   updatedAt: string;
@@ -1670,7 +1685,11 @@ export interface MessageLogSelect<T extends boolean = true> {
   template?: T;
   status?: T;
   attempts?: T;
+  nextAttemptAt?: T;
   error?: T;
+  body?: T;
+  params?: T;
+  language?: T;
   deliveredAt?: T;
   readAt?: T;
   updatedAt?: T;
@@ -1865,9 +1884,16 @@ export interface WhatsappSetting {
    * Last 4 characters of the saved key.
    */
   apiKeyHint?: string | null;
+  /**
+   * With country code, e.g. 91 98765 43210.
+   */
   senderNumber?: string | null;
   /**
-   * Updated by "Send test message" (Phase 5).
+   * The app name shown in your Gupshup dashboard.
+   */
+  appName?: string | null;
+  /**
+   * Updated by "Send test message".
    */
   connectionStatus?: ('notConnected' | 'connected' | 'error') | null;
   recipients?:
@@ -2074,6 +2100,7 @@ export interface WhatsappSettingsSelect<T extends boolean = true> {
   apiKey?: T;
   apiKeyHint?: T;
   senderNumber?: T;
+  appName?: T;
   connectionStatus?: T;
   recipients?:
     | T
