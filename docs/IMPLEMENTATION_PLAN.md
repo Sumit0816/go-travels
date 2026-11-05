@@ -251,7 +251,7 @@ Each milestone = one branch + one PR, reviewed before the next starts. Estimates
 
 **Done when:** every CMS board in the design has a working equivalent.
 
-### Phase 4 — Public website (≈7 days)
+### Phase 4 — Public website (≈7 days) · Done in three parts: 4a site shell + home ([PR #4](https://github.com/Sumit0816/go-travels/pull/4)), 4b tours ([PR #5](https://github.com/Sumit0816/go-travels/pull/5)), 4c content pages, blog, states and SEO
 
 1. Site shell: utility bar, header, **mega menu** (from Menus global), mobile drawer, footer (Site Settings), floating WhatsApp + "Find Your Perfect Trip" tab.
 2. **Home** with all sections, ordered/hidden per Homepage global; hero slider respects schedule; search widget → `/tours?…`.
@@ -267,7 +267,7 @@ Each milestone = one branch + one PR, reviewed before the next starts. Estimates
 ### Phase 5 — Booking & enquiry flows + WhatsApp (≈5 days)
 
 1. Shared Zod schemas; booking stepper (4 steps, state kept in URL/session so Back works and refresh doesn't lose data), adults 1–9 / children 0–6, rooms, add-ons, consent checkbox, Indian 10-digit mobile validation.
-2. Enquiry modal + `/plan-my-trip` + Contact form + Ask on WhatsApp, all → `enquiries`.
+2. Enquiry modal + `/plan-my-trip` + Contact form + Ask on WhatsApp, all → `enquiries`. (`/plan-my-trip` and the Contact form, with honeypot and rate limit, shipped early in Phase 4c; the modal and Ask on WhatsApp remain.)
 3. API routes with rate limiting, honeypot, optional Turnstile.
 4. WhatsApp adapter (Gupshup + Interakt), jobs, retries, email fallback, webhook, message log (§6).
 5. WhatsApp Integration admin screen: provider, encrypted key, sender, recipients, customer copy, email fallback, template preview with variables, **Send test message**, delivery log.

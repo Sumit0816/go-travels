@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/site/Breadcrumbs'
+import { JsonLd } from '@/components/site/JsonLd'
 import {
   BookingCard,
   BookingProvider,
@@ -22,7 +23,8 @@ import {
   toPackageCard,
 } from '@/lib/cms'
 import { hotelCategoryLabel, PACKAGE_BADGES, PACKAGE_THEMES } from '@/lib/catalog'
-import { whatsappHref } from '@/lib/site/links'
+import { plainText } from '@/lib/blog'
+import { siteUrl, whatsappHref } from '@/lib/site/links'
 import { firstImage, pickImage } from '@/lib/site/media'
 import type { Category, Destination } from '@/payload-types'
 
@@ -122,6 +124,37 @@ export default async function PackagePage({ params }: Props) {
 
   const related = await getRelatedPackages(pkg.id, dest?.id ?? null, category?.id ?? null)
 
+  const ogImage = firstImage(pkg.gallery, 'og')
+  const tripLd = {
+    '@context': 'https://schema.org',
+    '@type': 'TouristTrip',
+    name: pkg.title,
+    description: pkg.seo?.metaDescription || plainText(pkg.overview).slice(0, 300) || undefined,
+    url: `${siteUrl()}/packages/${slug}`,
+    image: ogImage ? new URL(ogImage.src, siteUrl()).toString() : undefined,
+    touristType: categories.map((c) => c.name),
+    itinerary: pkg.itinerary?.length
+      ? {
+          '@type': 'ItemList',
+          itemListElement: pkg.itinerary.map((d, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            name: d.title,
+          })),
+        }
+      : undefined,
+    offers: pkg.startingPrice
+      ? {
+          '@type': 'Offer',
+          price: pkg.startingPrice,
+          priceCurrency: 'INR',
+          description: 'Starting price per person, twin sharing',
+          availability: 'https://schema.org/InStock',
+        }
+      : undefined,
+    provider: { '@type': 'TravelAgency', name: settings?.siteName || 'Go Travels', url: siteUrl() },
+  }
+
   return (
     <BookingProvider
       slug={slug}
@@ -129,6 +162,7 @@ export default async function PackagePage({ params }: Props) {
       childPercent={pkg.childPricePercent}
       whatsappHref={askHref ?? contact.whatsappHref}
     >
+      <JsonLd data={tripLd} />
       <main className="gt-package">
         <div className="container-site flex flex-col gap-4 pt-6">
           <Breadcrumbs

@@ -40,3 +40,38 @@ export async function queueBookingAlert(
     })
   }
 }
+
+/**
+ * Queues the team alert for a new enquiry (same Phase 5 hand-off as bookings): marks the
+ * enquiry "Queued" and writes one delivery-log row per recipient.
+ */
+export async function queueEnquiryAlert(payload: Payload, enquiryId: number): Promise<void> {
+  const enquiry = await payload.update({
+    collection: 'enquiries',
+    id: enquiryId,
+    data: { whatsappStatus: 'queued' },
+    overrideAccess: true,
+    context: { disableRevalidate: true },
+  })
+  const settings = await payload.findGlobal({ slug: 'whatsappSettings', overrideAccess: true })
+  const recipients = settings.recipients?.length
+    ? settings.recipients
+    : [{ label: 'Owner', phone: '—' }]
+  for (const r of recipients) {
+    await payload.create({
+      collection: 'messageLog',
+      data: {
+        reference: enquiry.enquiryId ?? `enquiry-${enquiryId}`,
+        kind: 'enquiry',
+        enquiry: enquiryId,
+        recipientLabel: r.label,
+        phone: r.phone,
+        provider: settings.provider,
+        template: settings.enquiryTemplate?.name ?? undefined,
+        status: 'queued',
+        attempts: 0,
+      },
+      overrideAccess: true,
+    })
+  }
+}

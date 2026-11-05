@@ -295,6 +295,156 @@ export const getPublishedPackageSlugs = cached('package-slugs', [CACHE_TAGS.pack
   return docs.map((d) => d.slug).filter((s): s is string => !!s)
 })
 
+// ---- Content pages and blog (Phase 4c) ----
+
+export const getPageBySlug = cached(
+  'page-by-slug',
+  [CACHE_TAGS.pages, CACHE_TAGS.media],
+  async (slug: string) => {
+    const payload = await payloadClient()
+    const { docs } = await payload.find({
+      collection: 'pages',
+      where: { slug: { equals: slug } },
+      depth: 2,
+      limit: 1,
+      ...anon,
+    })
+    return docs[0] ?? null
+  },
+)
+
+export const getPublishedPageSlugs = cached('page-slugs', [CACHE_TAGS.pages], async () => {
+  const payload = await payloadClient()
+  const { docs } = await payload.find({
+    collection: 'pages',
+    depth: 0,
+    limit: 200,
+    pagination: false,
+    select: { slug: true, title: true, updatedAt: true },
+    ...anon,
+  })
+  return docs
+})
+
+export const getPostCategories = cached('post-categories', [CACHE_TAGS.posts], async () => {
+  const payload = await payloadClient()
+  const { docs } = await payload.find({
+    collection: 'postCategories',
+    sort: 'name',
+    depth: 0,
+    limit: 50,
+    ...anon,
+  })
+  return docs
+})
+
+export const findPosts = cached(
+  'posts-list',
+  [CACHE_TAGS.posts, CACHE_TAGS.media],
+  async (where: Where, page: number, limit: number) => {
+    const payload = await payloadClient()
+    return payload.find({
+      collection: 'posts',
+      where,
+      sort: '-publishedAt',
+      page,
+      limit,
+      depth: 1,
+      ...anon,
+    })
+  },
+)
+
+export const getPostBySlug = cached(
+  'post-by-slug',
+  [CACHE_TAGS.posts, CACHE_TAGS.packages, CACHE_TAGS.media],
+  async (slug: string) => {
+    const payload = await payloadClient()
+    const { docs } = await payload.find({
+      collection: 'posts',
+      where: { slug: { equals: slug } },
+      depth: 3,
+      limit: 1,
+      ...anon,
+    })
+    return docs[0] ?? null
+  },
+)
+
+export const getRelatedPosts = cached(
+  'related-posts',
+  [CACHE_TAGS.posts, CACHE_TAGS.media],
+  async (postId: number, categoryId: number | null) => {
+    const payload = await payloadClient()
+    const base: Where = { id: { not_equals: postId } }
+    const pick = async (where: Where, limit: number) =>
+      (
+        await payload.find({
+          collection: 'posts',
+          where,
+          sort: '-publishedAt',
+          depth: 1,
+          limit,
+          ...anon,
+        })
+      ).docs
+    const same = categoryId
+      ? await pick({ and: [base, { category: { equals: categoryId } }] }, 3)
+      : []
+    if (same.length >= 3) return same
+    const more = await pick(
+      { and: [base, { id: { not_in: same.map((p) => p.id) } }] },
+      3 - same.length,
+    )
+    return [...same, ...more]
+  },
+)
+
+export const getPublishedPostSlugs = cached('post-slugs', [CACHE_TAGS.posts], async () => {
+  const payload = await payloadClient()
+  const { docs } = await payload.find({
+    collection: 'posts',
+    depth: 0,
+    limit: 1000,
+    pagination: false,
+    select: { slug: true, updatedAt: true },
+    ...anon,
+  })
+  return docs
+})
+
+/** Everything the sitemap lists (published, public pages only). */
+export const getSitemapEntries = cached(
+  'sitemap',
+  [...TOUR_TAGS, CACHE_TAGS.posts, CACHE_TAGS.pages],
+  async () => {
+    const payload = await payloadClient()
+    const list = async (
+      collection: 'packages' | 'destinations' | 'categories' | 'posts' | 'pages',
+      extra: Where = {},
+    ) =>
+      (
+        await payload.find({
+          collection,
+          where: extra,
+          depth: 0,
+          limit: 2000,
+          pagination: false,
+          select: { slug: true, updatedAt: true },
+          ...anon,
+        })
+      ).docs as { slug?: string | null; updatedAt: string }[]
+    const [packages, destinations, categories, posts, pages] = await Promise.all([
+      list('packages'),
+      list('destinations', { hasPage: { equals: true } }),
+      list('categories'),
+      list('posts'),
+      list('pages'),
+    ])
+    return { packages, destinations, categories, posts, pages }
+  },
+)
+
 // ---- View models ----
 
 const BADGE_LABELS: Record<string, string> = {
