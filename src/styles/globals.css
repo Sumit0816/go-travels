@@ -1,0 +1,118 @@
+@import 'tailwindcss';
+@import './tokens.css';
+@import './components.css';
+
+/* Self-hosted font families (from @fontsource-variable, imported in the site layout). */
+:root {
+  --font-sora: 'Sora Variable';
+  --font-inter: 'Inter Variable';
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-surface);
+    color: var(--color-ink-900);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    margin: 0;
+    font-family: var(--font-display);
+  }
+
+  a {
+    color: var(--color-ocean-700);
+  }
+
+  a:hover {
+    color: var(--color-ocean-800);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-marigold-500);
+    outline-offset: 2px;
+  }
+
+  /* Inputs stay at 16px on phones so iOS does not zoom (TextField rules). */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+}
+
+/* Responsive heading styles — mobile drops one step (design-system README → Type). */
+@utility heading-display {
+  font-family: var(--font-display);
+  font-size: var(--text-display-mobile);
+  line-height: var(--text-display--line-height);
+  font-weight: var(--text-display--font-weight);
+  letter-spacing: var(--text-display--letter-spacing);
+  @media (min-width: 768px) {
+    font-size: var(--text-display);
+  }
+}
+
+@utility heading-1 {
+  font-family: var(--font-display);
+  font-size: var(--text-h1-mobile);
+  line-height: var(--text-h1--line-height);
+  font-weight: var(--text-h1--font-weight);
+  @media (min-width: 768px) {
+    font-size: var(--text-h1);
+  }
+}
+
+@utility heading-2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h2-mobile);
+  line-height: var(--text-h2--line-height);
+  font-weight: var(--text-h2--font-weight);
+  @media (min-width: 768px) {
+    font-size: var(--text-h2);
+  }
+}
+
+@utility heading-3 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3-mobile);
+  line-height: var(--text-h3--line-height);
+  font-weight: var(--text-h3--font-weight);
+  @media (min-width: 768px) {
+    font-size: var(--text-h3);
+  }
+}
+
+@utility eyebrow {
+  font-size: var(--text-eyebrow);
+  line-height: var(--text-eyebrow--line-height);
+  font-weight: var(--text-eyebrow--font-weight);
+  letter-spacing: var(--text-eyebrow--letter-spacing);
+  text-transform: uppercase;
+  color: var(--color-marigold-700);
+}
+
+/* Page container: 1280px max, 16px gutters on mobile, 24px on desktop. */
+@utility container-site {
+  width: 100%;
+  max-width: var(--container-site);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+  box-sizing: border-box;
+  @media (min-width: 768px) {
+    padding-inline: var(--space-6);
+  }
+}
