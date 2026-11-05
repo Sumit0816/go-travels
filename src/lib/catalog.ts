@@ -130,3 +130,26 @@ export function startingPrice(
     .filter((p): p is number => typeof p === 'number' && p > 0)
   return prices.length ? Math.min(...prices) : null
 }
+
+export const MONTHS = [
+  { label: 'Jan', value: 'jan' },
+  { label: 'Feb', value: 'feb' },
+  { label: 'Mar', value: 'mar' },
+  { label: 'Apr', value: 'apr' },
+  { label: 'May', value: 'may' },
+  { label: 'Jun', value: 'jun' },
+  { label: 'Jul', value: 'jul' },
+  { label: 'Aug', value: 'aug' },
+  { label: 'Sep', value: 'sep' },
+  { label: 'Oct', value: 'oct' },
+  { label: 'Nov', value: 'nov' },
+  { label: 'Dec', value: 'dec' },
+] as const
+export type Month = (typeof MONTHS)[number]['value']
+
+/** Listing filter buckets (design: "Duration 1–3 N / 4–6 N / 7+ N"). */
+export const DURATION_BUCKETS = [
+  { label: '1–3 N', value: '1-3', min: 1, max: 3 },
+  { label: '4–6 N', value: '4-6', min: 4, max: 6 },
+  { label: '7+ N', value: '7+', min: 7, max: 60 },
+] as const

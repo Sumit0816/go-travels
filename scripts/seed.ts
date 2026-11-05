@@ -259,6 +259,114 @@ async function main() {
   }
   payload.logger.info(`Destinations: ${destinationData.length}`)
 
+  // Destination page content (design: "Desktop · Destination page" for Goa).
+  const destinationDetails: Record<string, Record<string, unknown>> = {
+    goa: {
+      intro: "Beaches, forts, churches and sunset cruises — India's easiest beach holiday.",
+      facts: {
+        bestTime: 'November – February',
+        idealDuration: '3 – 5 nights',
+        nearestAirports: 'Dabolim (GOI) · Mopa (GOX)',
+      },
+      places: [
+        {
+          name: 'Baga & Calangute',
+          text: 'Lively beaches, water sports and night markets.',
+          image: img.beach,
+        },
+        {
+          name: 'Fort Aguada',
+          text: 'A 17th-century Portuguese fort and lighthouse above the sea.',
+          image: img.fort,
+        },
+        {
+          name: 'Old Goa',
+          text: 'The Basilica of Bom Jesus and Se Cathedral, a short drive from Panaji.',
+          image: img.temple,
+        },
+        {
+          name: 'Palolem',
+          text: 'A quieter crescent beach in South Goa, good for families.',
+          image: img.sunset,
+        },
+      ],
+      seasons: {
+        bestMonths: ['nov', 'dec', 'jan', 'feb'],
+        bestNote: 'pleasant, peak season',
+        goodMonths: ['mar', 'oct'],
+        goodNote: 'warm, fewer crowds',
+        offMonths: ['jun', 'jul', 'aug', 'sep'],
+        offNote: 'monsoon: green, many beach shacks closed',
+      },
+      faqs: [
+        {
+          question: 'How many days are enough for Goa?',
+          answer:
+            'Three to four nights covers North and South Goa comfortably; add a night for a slower pace.',
+        },
+        {
+          question: 'Which airport should I fly into?',
+          answer:
+            'Both Dabolim (GOI) and Mopa (GOX) work. We arrange pickup from either, or from Madgaon railway station.',
+        },
+        {
+          question: 'Is Goa good for families?',
+          answer:
+            'Yes. South Goa beaches are calmer, and we pick hotels with pools and family rooms.',
+        },
+      ],
+    },
+    kashmir: {
+      facts: {
+        bestTime: 'March – October · December for snow',
+        idealDuration: '5 – 7 nights',
+        nearestAirports: 'Srinagar (SXR)',
+      },
+      seasons: {
+        bestMonths: ['apr', 'may', 'jun', 'sep', 'oct'],
+        bestNote: 'meadows and lakes',
+        goodMonths: ['dec', 'jan', 'feb'],
+        goodNote: 'snow in Gulmarg',
+      },
+      places: [
+        {
+          name: 'Dal Lake',
+          text: 'Houseboats and shikara rides at sunrise.',
+          image: img.mountains,
+        },
+        { name: 'Gulmarg', text: 'The gondola, meadows and winter snow.', image: img.hills },
+      ],
+    },
+    dubai: {
+      facts: {
+        bestTime: 'November – March',
+        idealDuration: '4 – 5 nights',
+        nearestAirports: 'Dubai International (DXB)',
+      },
+      seasons: {
+        bestMonths: ['nov', 'dec', 'jan', 'feb', 'mar'],
+        bestNote: 'mild, outdoor season',
+        offMonths: ['jun', 'jul', 'aug'],
+        offNote: 'very hot, indoor attractions',
+      },
+      faqs: [
+        {
+          question: 'Do Indians need a visa for Dubai?',
+          answer:
+            'Most travellers need a tourist visa. We help you prepare the application when you book. [Check current rules before travel.]',
+        },
+      ],
+    },
+  }
+  for (const [slug, data] of Object.entries(destinationDetails)) {
+    await payload.update({
+      collection: 'destinations',
+      id: dest[slug],
+      data: data as never,
+      context: ctx,
+    })
+  }
+
   // ---- Categories ----
   const categoryData = [
     {
@@ -1500,8 +1608,14 @@ async function main() {
   })
   payload.logger.info('Globals: site settings, homepage, menus, WhatsApp settings')
 
+  // The website caches CMS data (Next.js data cache). Everything was recreated with new IDs, so
+  // drop the cache here; a running `npm run dev` also keeps a copy in memory until restarted.
+  for (const dir of ['.next/cache/fetch-cache', '.next/dev/cache/fetch-cache']) {
+    fs.rmSync(path.join(root, dir), { recursive: true, force: true })
+  }
+
   payload.logger.info(
-    'Seed complete. Sign in at /admin as rajesh@gotravels.in (Owner) with SEED_USER_PASSWORD.',
+    'Seed complete. Restart `npm run dev` if it is running, then sign in at /admin as rajesh@gotravels.in (Owner) with SEED_USER_PASSWORD.',
   )
   process.exit(0)
 }

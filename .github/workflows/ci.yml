@@ -34,6 +34,7 @@ jobs:
       PAYLOAD_SECRET: ci-only-secret-not-used-in-production
       # Throwaway key for CI only (encrypts the test WhatsApp API key in integration tests).
       WHATSAPP_ENC_KEY: '0000000000000000000000000000000000000000000000000000000000000001'
+      SEED_USER_PASSWORD: ci-only-seed-password
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       NEXT_TELEMETRY_DISABLED: 1
 
@@ -69,6 +70,9 @@ jobs:
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
+
+      - name: Load demo content for end-to-end tests
+        run: npm run seed
 
       - name: End-to-end tests (desktop + mobile)
         run: npm run test:e2e
