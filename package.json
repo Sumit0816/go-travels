@@ -17,7 +17,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "cross-env NODE_OPTIONS=--no-deprecation vitest run tests/unit",
-    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run tests/int",
+    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run tests/int --no-file-parallelism",
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
