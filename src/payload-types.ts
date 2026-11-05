@@ -67,8 +67,21 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    users: User;
+    bookings: Booking;
+    enquiries: Enquiry;
+    packages: Package;
+    destinations: Destination;
+    categories: Category;
+    slides: Slide;
+    testimonials: Testimonial;
+    reviewLinks: ReviewLink;
+    posts: Post;
+    postCategories: PostCategory;
+    pages: Page;
     media: Media;
+    users: User;
+    messageLog: MessageLog;
+    counters: Counter;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -76,8 +89,21 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
+    bookings: BookingsSelect<false> | BookingsSelect<true>;
+    enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
+    packages: PackagesSelect<false> | PackagesSelect<true>;
+    destinations: DestinationsSelect<false> | DestinationsSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    slides: SlidesSelect<false> | SlidesSelect<true>;
+    testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
+    reviewLinks: ReviewLinksSelect<false> | ReviewLinksSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
+    postCategories: PostCategoriesSelect<false> | PostCategoriesSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
+    messageLog: MessageLogSelect<false> | MessageLogSelect<true>;
+    counters: CountersSelect<false> | CountersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -87,8 +113,18 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    homepage: Homepage;
+    navigation: Navigation;
+    whatsappSettings: WhatsappSetting;
+    siteSettings: SiteSetting;
+  };
+  globalsSelect: {
+    homepage: HomepageSelect<false> | HomepageSelect<true>;
+    navigation: NavigationSelect<false> | NavigationSelect<true>;
+    whatsappSettings: WhatsappSettingsSelect<false> | WhatsappSettingsSelect<true>;
+    siteSettings: SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -118,11 +154,394 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Every request from the website, and its WhatsApp delivery status.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings".
+ */
+export interface Booking {
+  id: number;
+  /**
+   * Set automatically, e.g. GT-24871.
+   */
+  requestId?: string | null;
+  package?: (number | null) | Package;
+  /**
+   * Kept so the request still reads correctly if the package changes.
+   */
+  packageSnapshot?: {
+    title?: string | null;
+    duration?: string | null;
+  };
+  travelDate: string;
+  departureCity?: string | null;
+  hotelCategory?: ('standard3' | 'deluxe4' | 'luxury5') | null;
+  rooms?: number | null;
+  adults: number;
+  children?: number | null;
+  addOns?: string[] | null;
+  /**
+   * Shown to the customer as an estimate; final price confirmed on WhatsApp.
+   */
+  estimatedTotal?: number | null;
+  name: string;
+  whatsapp: string;
+  email?: string | null;
+  city?: string | null;
+  specialRequests?: string | null;
+  consent?: boolean | null;
+  internalNotes?:
+    | {
+        text: string;
+        author?: (number | null) | User;
+        at?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  status: 'new' | 'contacted' | 'confirmed' | 'cancelled';
+  assignedTo?: (number | null) | User;
+  whatsappStatus?: ('notSent' | 'queued' | 'sent' | 'delivered' | 'read' | 'failed') | null;
+  source?: ('website' | 'phone' | 'enquiry') | null;
+  fromEnquiry?: (number | null) | Enquiry;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * All tour packages shown on the website.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "packages".
+ */
+export interface Package {
+  id: number;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * e.g. GT-GOA-04
+   */
+  tourCode: string;
+  destination: number | Destination;
+  durationNights: number;
+  /**
+   * Defaults to nights + 1
+   */
+  durationDays?: number | null;
+  categories: (number | Category)[];
+  themes?:
+    | ('beach' | 'family' | 'couples' | 'honeymoon' | 'adventure' | 'luxury' | 'value' | 'pilgrimage' | 'corporate')[]
+    | null;
+  /**
+   * e.g. Goa Airport (GOI) / Madgaon
+   */
+  pickup?: string | null;
+  /**
+   * e.g. Bangkok · Pattaya
+   */
+  cities?: string | null;
+  /**
+   * Short line on cards, e.g. "Hotel · Breakfast · Transfers".
+   */
+  cardInclusions?: string | null;
+  highlights?: {
+    /**
+     * e.g. 3★ / 4★ / 5★
+     */
+    stay?: string | null;
+    /**
+     * e.g. Daily breakfast
+     */
+    meals?: string | null;
+    /**
+     * e.g. Private AC cab
+     */
+    transport?: string | null;
+  };
+  overview?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Drag to reorder. The first image is the cover.
+   */
+  gallery?: (number | Media)[] | null;
+  itinerary?:
+    | {
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  inclusions?:
+    | {
+        item: string;
+        id?: string | null;
+      }[]
+    | null;
+  exclusions?:
+    | {
+        item: string;
+        id?: string | null;
+      }[]
+    | null;
+  hotelOptions: {
+    category: 'standard3' | 'deluxe4' | 'luxury5';
+    price: number;
+    strikePrice?: number | null;
+    isPopular?: boolean | null;
+    hotelName?: string | null;
+    id?: string | null;
+  }[];
+  childPricePercent?: number | null;
+  addOns?:
+    | {
+        name: string;
+        price?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  policies?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  faqs?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Leave empty to use the title and the site defaults.
+   */
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+  };
+  status: 'draft' | 'published' | 'archived';
+  badge?: ('none' | 'bestseller' | 'new' | 'limitedOffer') | null;
+  showInPopular?: boolean | null;
+  featureOnSlider?: boolean | null;
+  /**
+   * Lowest hotel price, set automatically.
+   */
+  startingPrice?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "destinations".
+ */
+export interface Destination {
+  id: number;
+  name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * e.g. West India, Jharkhand, Middle East, Southeast Asia
+   */
+  region?: string | null;
+  isInternational?: boolean | null;
+  /**
+   * Shown while there is no photo.
+   */
+  tone?: ('coast' | 'desert' | 'forest' | 'romance' | 'pilgrim' | 'mountain') | null;
+  thumbnail?: (number | null) | Media;
+  heroImage?: (number | null) | Media;
+  /**
+   * One or two sentences for the page header.
+   */
+  intro?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  hasPage?: boolean | null;
+  /**
+   * Leave empty to use the title and the site defaults.
+   */
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Images are compressed to WebP and resized automatically on upload.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  /**
+   * Describe what the photo shows, e.g. "Baga beach at sunset".
+   */
+  alt: string;
+  folder?: ('packages' | 'destinations' | 'slider' | 'blog' | 'brand' | 'general') | null;
+  /**
+   * Photographer or licence, if required.
+   */
+  credit?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    hero?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    heroMobile?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    og?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * Groups packages for the menus, homepage tiles and listing pages.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  _order?: string | null;
+  name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * Short caps label on the homepage tile, e.g. INDIA, ABROAD.
+   */
+  eyebrow?: string | null;
+  /**
+   * e.g. "Goa, Kashmir, Kerala, Jharkhand"
+   */
+  subtitle?: string | null;
+  /**
+   * Shown under the listing page title.
+   */
+  intro?: string | null;
+  colour?: ('ocean' | 'ink' | 'pilgrim' | 'plum' | 'forest' | 'marigold' | 'mountain') | null;
+  heroImage?: (number | null) | Media;
+  /**
+   * Chips shown above the listing, in this order.
+   */
+  subDestinations?: (number | Destination)[] | null;
+  showOnHome?: boolean | null;
+  /**
+   * Leave empty to use the title and the site defaults.
+   */
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Who can sign in to the CMS, and what they can change.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
+  name: string;
+  /**
+   * Used for booking alerts. Format: +91 98765 43210
+   */
+  phone?: string | null;
+  role: 'owner' | 'manager' | 'sales' | 'contentEditor';
+  whatsappAlerts: 'primary' | 'yes' | 'assignedOnly' | 'no';
+  status: 'invited' | 'active' | 'suspended';
+  lastActive?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -144,23 +563,337 @@ export interface User {
   collection: 'users';
 }
 /**
+ * From "Find Your Perfect Trip", Contact Us and package "Ask on WhatsApp".
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
+ * via the `definition` "enquiries".
  */
-export interface Media {
+export interface Enquiry {
   id: number;
-  alt: string;
+  /**
+   * Set automatically, e.g. EQ-1093.
+   */
+  enquiryId?: string | null;
+  name: string;
+  whatsapp: string;
+  email?: string | null;
+  tripType?: ('domestic' | 'international' | 'honeymoon' | 'religious' | 'family' | 'mice') | null;
+  destination?: string | null;
+  /**
+   * YYYY-MM, e.g. 2027-02
+   */
+  travelMonth?: string | null;
+  travellers?: ('2-adults' | 'family-2-2' | 'group-6' | 'solo') | null;
+  budget?: ('under-25k' | '25k-50k' | '50k-1l' | '1l-plus') | null;
+  message?: string | null;
+  /**
+   * Set when the enquiry came from a package page.
+   */
+  package?: (number | null) | Package;
+  internalNotes?:
+    | {
+        text: string;
+        author?: (number | null) | User;
+        at?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  status: 'new' | 'contacted' | 'quoteSent' | 'converted' | 'closed';
+  assignedTo?: (number | null) | User;
+  source: 'tripFinder' | 'contactForm' | 'askWhatsApp' | 'phone';
+  whatsappStatus?: ('notSent' | 'queued' | 'sent' | 'delivered' | 'read' | 'failed') | null;
+  convertedBooking?: (number | null) | Booking;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * Hero slides at the top of the homepage.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "slides".
+ */
+export interface Slide {
+  id: number;
+  _order?: string | null;
+  /**
+   * e.g. A NEW WORLD AWAITS
+   */
+  eyebrow?: string | null;
+  heading: string;
+  buttonLabel: string;
+  linkType: 'category' | 'destination' | 'package' | 'page' | 'custom';
+  category?: (number | null) | Category;
+  destination?: (number | null) | Destination;
+  package?: (number | null) | Package;
+  page?: (number | null) | Page;
+  /**
+   * A path like /tours/domestic or a full https:// link.
+   */
   url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
+  imageDesktop: number | Media;
+  /**
+   * Optional. Uses the desktop image and its focal point if empty.
+   */
+  imageMobile?: (number | null) | Media;
+  showFrom?: string | null;
+  showUntil?: string | null;
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  layout: (
+    | {
+        eyebrow?: string | null;
+        heading: string;
+        intro?: string | null;
+        image?: (number | null) | Media;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'hero';
+      }
+    | {
+        heading?: string | null;
+        content: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'richText';
+      }
+    | {
+        items?:
+          | {
+              /**
+               * e.g. 12,000+
+               */
+              value: string;
+              label: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'stats';
+      }
+    | {
+        eyebrow?: string | null;
+        heading?: string | null;
+        items?:
+          | {
+              title: string;
+              text?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'features';
+      }
+    | {
+        heading?: string | null;
+        members?:
+          | {
+              name: string;
+              role?: string | null;
+              photo?: (number | null) | Media;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'team';
+      }
+    | {
+        heading: string;
+        text?: string | null;
+        buttonLabel: string;
+        linkType: 'category' | 'destination' | 'package' | 'page' | 'custom';
+        category?: (number | null) | Category;
+        destination?: (number | null) | Destination;
+        package?: (number | null) | Package;
+        page?: (number | null) | Page;
+        /**
+         * A path like /tours/domestic or a full https:// link.
+         */
+        url?: string | null;
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'cta';
+      }
+  )[];
+  /**
+   * Leave empty to use the title and the site defaults.
+   */
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+  };
+  status: 'draft' | 'published';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Only approved reviews appear in "What Our Clients Say".
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials".
+ */
+export interface Testimonial {
+  id: number;
+  name: string;
+  package?: (number | null) | Package;
+  /**
+   * Shown under the name, e.g. "Goa Beach Escape · Dec 2026"
+   */
+  tripLabel?: string | null;
+  rating: number;
+  text: string;
+  photo?: (number | null) | Media;
+  status: 'pending' | 'approved' | 'hidden';
+  source: 'reviewLink' | 'staff' | 'google';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviewLinks".
+ */
+export interface ReviewLink {
+  id: number;
+  token: string;
+  name: string;
+  phone: string;
+  package?: (number | null) | Package;
+  expiresAt: string;
+  usedAt?: string | null;
+  testimonial?: (number | null) | Testimonial;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: number;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  excerpt?: string | null;
+  cover?: (number | null) | Media;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Leave empty to use the title and the site defaults.
+   */
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+  };
+  status: 'draft' | 'published' | 'scheduled';
+  publishedAt?: string | null;
+  category?: (number | null) | PostCategory;
+  author?: (number | null) | User;
+  featured?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "postCategories".
+ */
+export interface PostCategory {
+  id: number;
+  name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messageLog".
+ */
+export interface MessageLog {
+  id: number;
+  /**
+   * GT-… / EQ-… / TEST
+   */
+  reference: string;
+  kind: 'booking' | 'enquiry' | 'customerCopy' | 'reviewLink' | 'test';
+  booking?: (number | null) | Booking;
+  enquiry?: (number | null) | Enquiry;
+  /**
+   * e.g. Owner, Sales desk, Customer
+   */
+  recipientLabel?: string | null;
+  phone: string;
+  provider?: ('gupshup' | 'interakt' | 'wati' | 'aisensy' | 'msg91' | 'twilio') | null;
+  providerMessageId?: string | null;
+  template?: string | null;
+  status: 'queued' | 'sent' | 'delivered' | 'read' | 'failed';
+  attempts?: number | null;
+  error?: string | null;
+  deliveredAt?: string | null;
+  readAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "counters".
+ */
+export interface Counter {
+  id: number;
+  key: string;
+  value: number;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -187,12 +920,64 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'bookings';
+        value: number | Booking;
+      } | null)
+    | ({
+        relationTo: 'enquiries';
+        value: number | Enquiry;
+      } | null)
+    | ({
+        relationTo: 'packages';
+        value: number | Package;
+      } | null)
+    | ({
+        relationTo: 'destinations';
+        value: number | Destination;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'slides';
+        value: number | Slide;
+      } | null)
+    | ({
+        relationTo: 'testimonials';
+        value: number | Testimonial;
+      } | null)
+    | ({
+        relationTo: 'reviewLinks';
+        value: number | ReviewLink;
+      } | null)
+    | ({
+        relationTo: 'posts';
+        value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'postCategories';
+        value: number | PostCategory;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
       } | null)
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'messageLog';
+        value: number | MessageLog;
+      } | null)
+    | ({
+        relationTo: 'counters';
+        value: number | Counter;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -238,9 +1023,492 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings_select".
+ */
+export interface BookingsSelect<T extends boolean = true> {
+  requestId?: T;
+  package?: T;
+  packageSnapshot?:
+    | T
+    | {
+        title?: T;
+        duration?: T;
+      };
+  travelDate?: T;
+  departureCity?: T;
+  hotelCategory?: T;
+  rooms?: T;
+  adults?: T;
+  children?: T;
+  addOns?: T;
+  estimatedTotal?: T;
+  name?: T;
+  whatsapp?: T;
+  email?: T;
+  city?: T;
+  specialRequests?: T;
+  consent?: T;
+  internalNotes?:
+    | T
+    | {
+        text?: T;
+        author?: T;
+        at?: T;
+        id?: T;
+      };
+  status?: T;
+  assignedTo?: T;
+  whatsappStatus?: T;
+  source?: T;
+  fromEnquiry?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries_select".
+ */
+export interface EnquiriesSelect<T extends boolean = true> {
+  enquiryId?: T;
+  name?: T;
+  whatsapp?: T;
+  email?: T;
+  tripType?: T;
+  destination?: T;
+  travelMonth?: T;
+  travellers?: T;
+  budget?: T;
+  message?: T;
+  package?: T;
+  internalNotes?:
+    | T
+    | {
+        text?: T;
+        author?: T;
+        at?: T;
+        id?: T;
+      };
+  status?: T;
+  assignedTo?: T;
+  source?: T;
+  whatsappStatus?: T;
+  convertedBooking?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "packages_select".
+ */
+export interface PackagesSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  tourCode?: T;
+  destination?: T;
+  durationNights?: T;
+  durationDays?: T;
+  categories?: T;
+  themes?: T;
+  pickup?: T;
+  cities?: T;
+  cardInclusions?: T;
+  highlights?:
+    | T
+    | {
+        stay?: T;
+        meals?: T;
+        transport?: T;
+      };
+  overview?: T;
+  gallery?: T;
+  itinerary?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  inclusions?:
+    | T
+    | {
+        item?: T;
+        id?: T;
+      };
+  exclusions?:
+    | T
+    | {
+        item?: T;
+        id?: T;
+      };
+  hotelOptions?:
+    | T
+    | {
+        category?: T;
+        price?: T;
+        strikePrice?: T;
+        isPopular?: T;
+        hotelName?: T;
+        id?: T;
+      };
+  childPricePercent?: T;
+  addOns?:
+    | T
+    | {
+        name?: T;
+        price?: T;
+        id?: T;
+      };
+  policies?: T;
+  faqs?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+      };
+  status?: T;
+  badge?: T;
+  showInPopular?: T;
+  featureOnSlider?: T;
+  startingPrice?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "destinations_select".
+ */
+export interface DestinationsSelect<T extends boolean = true> {
+  name?: T;
+  generateSlug?: T;
+  slug?: T;
+  region?: T;
+  isInternational?: T;
+  tone?: T;
+  thumbnail?: T;
+  heroImage?: T;
+  intro?: T;
+  description?: T;
+  hasPage?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  _order?: T;
+  name?: T;
+  generateSlug?: T;
+  slug?: T;
+  eyebrow?: T;
+  subtitle?: T;
+  intro?: T;
+  colour?: T;
+  heroImage?: T;
+  subDestinations?: T;
+  showOnHome?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "slides_select".
+ */
+export interface SlidesSelect<T extends boolean = true> {
+  _order?: T;
+  eyebrow?: T;
+  heading?: T;
+  buttonLabel?: T;
+  linkType?: T;
+  category?: T;
+  destination?: T;
+  package?: T;
+  page?: T;
+  url?: T;
+  imageDesktop?: T;
+  imageMobile?: T;
+  showFrom?: T;
+  showUntil?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials_select".
+ */
+export interface TestimonialsSelect<T extends boolean = true> {
+  name?: T;
+  package?: T;
+  tripLabel?: T;
+  rating?: T;
+  text?: T;
+  photo?: T;
+  status?: T;
+  source?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviewLinks_select".
+ */
+export interface ReviewLinksSelect<T extends boolean = true> {
+  token?: T;
+  name?: T;
+  phone?: T;
+  package?: T;
+  expiresAt?: T;
+  usedAt?: T;
+  testimonial?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  excerpt?: T;
+  cover?: T;
+  content?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+      };
+  status?: T;
+  publishedAt?: T;
+  category?: T;
+  author?: T;
+  featured?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "postCategories_select".
+ */
+export interface PostCategoriesSelect<T extends boolean = true> {
+  name?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  layout?:
+    | T
+    | {
+        hero?:
+          | T
+          | {
+              eyebrow?: T;
+              heading?: T;
+              intro?: T;
+              image?: T;
+              id?: T;
+              blockName?: T;
+            };
+        richText?:
+          | T
+          | {
+              heading?: T;
+              content?: T;
+              id?: T;
+              blockName?: T;
+            };
+        stats?:
+          | T
+          | {
+              items?:
+                | T
+                | {
+                    value?: T;
+                    label?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        features?:
+          | T
+          | {
+              eyebrow?: T;
+              heading?: T;
+              items?:
+                | T
+                | {
+                    title?: T;
+                    text?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        team?:
+          | T
+          | {
+              heading?: T;
+              members?:
+                | T
+                | {
+                    name?: T;
+                    role?: T;
+                    photo?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        cta?:
+          | T
+          | {
+              heading?: T;
+              text?: T;
+              buttonLabel?: T;
+              linkType?: T;
+              category?: T;
+              destination?: T;
+              package?: T;
+              page?: T;
+              url?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+      };
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  folder?: T;
+  credit?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        card?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        hero?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        heroMobile?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        og?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  role?: T;
+  whatsappAlerts?: T;
+  status?: T;
+  lastActive?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -261,21 +1529,35 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
+ * via the `definition` "messageLog_select".
  */
-export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
+export interface MessageLogSelect<T extends boolean = true> {
+  reference?: T;
+  kind?: T;
+  booking?: T;
+  enquiry?: T;
+  recipientLabel?: T;
+  phone?: T;
+  provider?: T;
+  providerMessageId?: T;
+  template?: T;
+  status?: T;
+  attempts?: T;
+  error?: T;
+  deliveredAt?: T;
+  readAt?: T;
   updatedAt?: T;
   createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "counters_select".
+ */
+export interface CountersSelect<T extends boolean = true> {
+  key?: T;
+  value?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -316,6 +1598,429 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Drag to reorder sections; untick to hide one.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage".
+ */
+export interface Homepage {
+  id: number;
+  sections?:
+    | {
+        section: 'slider' | 'search' | 'popular' | 'categories' | 'whyUs' | 'ctaBand' | 'testimonials';
+        visible?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Tabs under "Popular Destinations", in this order.
+   */
+  popularTabs?: (number | Destination)[] | null;
+  whyUs?: {
+    eyebrow?: string | null;
+    heading?: string | null;
+    items?:
+      | {
+          title: string;
+          text?: string | null;
+          icon?: ('mapPin' | 'clock' | 'phone' | 'check' | 'whatsapp') | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  ctaBand?: {
+    heading?: string | null;
+    text?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Header menu and footer link lists.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "navigation".
+ */
+export interface Navigation {
+  id: number;
+  header?:
+    | {
+        label: string;
+        linkType: 'category' | 'destination' | 'package' | 'page' | 'custom';
+        category?: (number | null) | Category;
+        destination?: (number | null) | Destination;
+        package?: (number | null) | Package;
+        page?: (number | null) | Page;
+        /**
+         * A path like /tours/domestic or a full https:// link.
+         */
+        url?: string | null;
+        /**
+         * Optional columns, e.g. "North India", "South India".
+         */
+        megaMenu?:
+          | {
+              heading: string;
+              links?:
+                | {
+                    label: string;
+                    linkType: 'category' | 'destination' | 'package' | 'page' | 'custom';
+                    category?: (number | null) | Category;
+                    destination?: (number | null) | Destination;
+                    package?: (number | null) | Package;
+                    page?: (number | null) | Page;
+                    /**
+                     * A path like /tours/domestic or a full https:// link.
+                     */
+                    url?: string | null;
+                    id?: string | null;
+                  }[]
+                | null;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * Shown on the right of the mega menu.
+         */
+        featuredPackage?: (number | null) | Package;
+        id?: string | null;
+      }[]
+    | null;
+  footerQuickLinks?:
+    | {
+        label: string;
+        linkType: 'category' | 'destination' | 'package' | 'page' | 'custom';
+        category?: (number | null) | Category;
+        destination?: (number | null) | Destination;
+        package?: (number | null) | Package;
+        page?: (number | null) | Page;
+        /**
+         * A path like /tours/domestic or a full https:// link.
+         */
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  footerTours?:
+    | {
+        label: string;
+        linkType: 'category' | 'destination' | 'package' | 'page' | 'custom';
+        category?: (number | null) | Category;
+        destination?: (number | null) | Destination;
+        package?: (number | null) | Package;
+        page?: (number | null) | Page;
+        /**
+         * A path like /tours/domestic or a full https:// link.
+         */
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Booking requests are sent to your team through a WhatsApp Business messaging aggregator.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "whatsappSettings".
+ */
+export interface WhatsappSetting {
+  id: number;
+  provider: 'gupshup' | 'interakt' | 'wati' | 'aisensy' | 'msg91' | 'twilio';
+  /**
+   * Stored encrypted on the server and never sent to the browser. Leave empty to keep the current key.
+   */
+  apiKey?: string | null;
+  /**
+   * Last 4 characters of the saved key.
+   */
+  apiKeyHint?: string | null;
+  senderNumber?: string | null;
+  /**
+   * Updated by "Send test message" (Phase 5).
+   */
+  connectionStatus?: ('notConnected' | 'connected' | 'error') | null;
+  recipients?:
+    | {
+        /**
+         * e.g. Owner, Sales desk
+         */
+        label: string;
+        phone: string;
+        isPrimary?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  sendCustomerCopy?: boolean | null;
+  emailFallback?: boolean | null;
+  fallbackEmail?: string | null;
+  /**
+   * Sent to the team for every booking.
+   */
+  bookingTemplate?: {
+    name?: string | null;
+    language?: string | null;
+  };
+  /**
+   * Sent to the team for every enquiry.
+   */
+  enquiryTemplate?: {
+    name?: string | null;
+    language?: string | null;
+  };
+  /**
+   * Sent to the customer when the copy is switched on.
+   */
+  customerTemplate?: {
+    name?: string | null;
+    language?: string | null;
+  };
+  /**
+   * Sent when staff request a review.
+   */
+  reviewTemplate?: {
+    name?: string | null;
+    language?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * These values fill the header, footer, contact page and search results.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "siteSettings".
+ */
+export interface SiteSetting {
+  id: number;
+  siteName: string;
+  tagline?: string | null;
+  /**
+   * Optional. The built-in logo is used if empty.
+   */
+  logo?: (number | null) | Media;
+  /**
+   * Square, 512×512.
+   */
+  favicon?: (number | null) | Media;
+  address?: string | null;
+  phones?:
+    | {
+        number: string;
+        /**
+         * e.g. Mobile, Office
+         */
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  whatsapp?: string | null;
+  email?: string | null;
+  workingHours?: string | null;
+  mapEmbedUrl?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
+  youtube?: string | null;
+  googleReviews?: string | null;
+  defaultMetaTitle?: string | null;
+  defaultMetaDescription?: string | null;
+  defaultOgImage?: (number | null) | Media;
+  /**
+   * e.g. G-XXXXXXX
+   */
+  gaId?: string | null;
+  searchConsoleCode?: string | null;
+  sitemapEnabled?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage_select".
+ */
+export interface HomepageSelect<T extends boolean = true> {
+  sections?:
+    | T
+    | {
+        section?: T;
+        visible?: T;
+        id?: T;
+      };
+  popularTabs?: T;
+  whyUs?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        items?:
+          | T
+          | {
+              title?: T;
+              text?: T;
+              icon?: T;
+              id?: T;
+            };
+      };
+  ctaBand?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "navigation_select".
+ */
+export interface NavigationSelect<T extends boolean = true> {
+  header?:
+    | T
+    | {
+        label?: T;
+        linkType?: T;
+        category?: T;
+        destination?: T;
+        package?: T;
+        page?: T;
+        url?: T;
+        megaMenu?:
+          | T
+          | {
+              heading?: T;
+              links?:
+                | T
+                | {
+                    label?: T;
+                    linkType?: T;
+                    category?: T;
+                    destination?: T;
+                    package?: T;
+                    page?: T;
+                    url?: T;
+                    id?: T;
+                  };
+              id?: T;
+            };
+        featuredPackage?: T;
+        id?: T;
+      };
+  footerQuickLinks?:
+    | T
+    | {
+        label?: T;
+        linkType?: T;
+        category?: T;
+        destination?: T;
+        package?: T;
+        page?: T;
+        url?: T;
+        id?: T;
+      };
+  footerTours?:
+    | T
+    | {
+        label?: T;
+        linkType?: T;
+        category?: T;
+        destination?: T;
+        package?: T;
+        page?: T;
+        url?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "whatsappSettings_select".
+ */
+export interface WhatsappSettingsSelect<T extends boolean = true> {
+  provider?: T;
+  apiKey?: T;
+  apiKeyHint?: T;
+  senderNumber?: T;
+  connectionStatus?: T;
+  recipients?:
+    | T
+    | {
+        label?: T;
+        phone?: T;
+        isPrimary?: T;
+        id?: T;
+      };
+  sendCustomerCopy?: T;
+  emailFallback?: T;
+  fallbackEmail?: T;
+  bookingTemplate?:
+    | T
+    | {
+        name?: T;
+        language?: T;
+      };
+  enquiryTemplate?:
+    | T
+    | {
+        name?: T;
+        language?: T;
+      };
+  customerTemplate?:
+    | T
+    | {
+        name?: T;
+        language?: T;
+      };
+  reviewTemplate?:
+    | T
+    | {
+        name?: T;
+        language?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "siteSettings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  siteName?: T;
+  tagline?: T;
+  logo?: T;
+  favicon?: T;
+  address?: T;
+  phones?:
+    | T
+    | {
+        number?: T;
+        label?: T;
+        id?: T;
+      };
+  whatsapp?: T;
+  email?: T;
+  workingHours?: T;
+  mapEmbedUrl?: T;
+  instagram?: T;
+  facebook?: T;
+  youtube?: T;
+  googleReviews?: T;
+  defaultMetaTitle?: T;
+  defaultMetaDescription?: T;
+  defaultOgImage?: T;
+  gaId?: T;
+  searchConsoleCode?: T;
+  sitemapEnabled?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

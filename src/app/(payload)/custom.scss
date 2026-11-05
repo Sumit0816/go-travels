@@ -1,0 +1,23 @@
+// Go Travels brand touches for the Payload admin (colours from the design system).
+// Payload keeps its own layout; we only recolour primary actions and links.
+:root {
+  --gt-ocean-700: #0b4f6c;
+  --gt-ocean-800: #083a50;
+  --gt-marigold-500: #f2a541;
+}
+
+.btn--style-primary {
+  background-color: var(--gt-ocean-700);
+  &:hover,
+  &:focus-visible {
+    background-color: var(--gt-ocean-800);
+  }
+}
+
+:focus-visible {
+  outline-color: var(--gt-marigold-500);
+}
+
+.nav-group__toggle {
+  letter-spacing: 0.08em;
+}

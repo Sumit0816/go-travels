@@ -9,3 +9,4 @@ src/styles/tokens.css
 src/design/tokens.json
 package-lock.json
 public
+src/migrations

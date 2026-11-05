@@ -218,7 +218,7 @@ Each milestone = one branch + one PR, reviewed before the next starts. Estimates
 - [ ] Create Neon/Supabase Postgres, S3/R2 bucket (or Cloudinary), Vercel project, domain
 - [ ] Gather real photos, package data, prices, contact details
 
-### Phase 1 — Foundation (≈3 days)
+### Phase 1 — Foundation (≈3 days) · Done ([PR #1](https://github.com/Sumit0816/go-travels/pull/1))
 
 1. Scaffold with `create-payload-app` (blank + Postgres), TypeScript strict, ESLint flat config, Prettier, path aliases.
 2. `docker-compose.yml` for local Postgres; `.env.example` (`DATABASE_URI`, `PAYLOAD_SECRET`, `NEXT_PUBLIC_SITE_URL`, `S3_*`, `WHATSAPP_ENC_KEY`, `WHATSAPP_WEBHOOK_SECRET`, `EMAIL_*`, `SENTRY_DSN`).
@@ -228,7 +228,7 @@ Each milestone = one branch + one PR, reviewed before the next starts. Estimates
 
 **Done when:** `npm run dev` serves a styled placeholder home and `/admin` login; CI is green.
 
-### Phase 2 — CMS data model & roles (≈4 days)
+### Phase 2 — CMS data model & roles (≈4 days) · Done
 
 1. All collections and globals from §5 with validation, slugs, admin list columns and filters.
 2. Access control matrix (§5.3) + unit tests for every cell.
