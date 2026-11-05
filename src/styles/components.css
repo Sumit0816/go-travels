@@ -1,0 +1,525 @@
+/*
+ * Go Travels design-system components (gt- classes), ported from the design system's
+ * components/bundle.css. Values come from tokens.css. The React wrappers live in
+ * src/components/ui.
+ */
+@layer components {
+  /* Button */
+  .gt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--size-control-md);
+    padding: 0 22px;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    font: 600 15px/1 var(--font-body);
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .gt-btn--primary {
+    background: var(--color-ocean-700);
+    color: var(--color-surface);
+  }
+  .gt-btn--primary:hover {
+    background: var(--color-ocean-800);
+    color: var(--color-surface);
+  }
+  .gt-btn--accent {
+    background: var(--color-marigold-500);
+    color: var(--color-ink-900);
+  }
+  .gt-btn--accent:hover {
+    color: var(--color-ink-900);
+    filter: brightness(0.96);
+  }
+  .gt-btn--whatsapp {
+    background: var(--color-whatsapp-600);
+    color: var(--color-surface);
+  }
+  .gt-btn--whatsapp:hover {
+    color: var(--color-surface);
+    filter: brightness(0.92);
+  }
+  .gt-btn--outline {
+    background: var(--color-surface);
+    color: var(--color-ink-900);
+    border-color: var(--color-line-300);
+  }
+  .gt-btn--outline:hover {
+    color: var(--color-ink-900);
+    border-color: var(--color-ink-500);
+  }
+  .gt-btn--ghost {
+    background: transparent;
+    color: var(--color-ocean-700);
+    padding: 0 12px;
+  }
+  .gt-btn--lg {
+    min-height: var(--size-control-lg);
+    padding: 0 26px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+  .gt-btn--sm {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 14px;
+    border-radius: var(--radius-sm);
+  }
+  .gt-btn--icon {
+    width: var(--size-touch-min);
+    min-height: var(--size-touch-min);
+    padding: 0;
+    border-radius: var(--radius-pill);
+  }
+  .gt-btn--block {
+    width: 100%;
+  }
+  .gt-btn:disabled,
+  .gt-btn[aria-disabled='true'] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  /* Text field */
+  .gt-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font: 600 13px/1.3 var(--font-body);
+    color: var(--color-ink-900);
+  }
+  .gt-input {
+    height: var(--size-control-md);
+    border: 1px solid var(--color-line-300);
+    border-radius: var(--radius-md);
+    padding: 0 14px;
+    font: 400 15px var(--font-body);
+    color: var(--color-ink-900);
+    background: var(--color-surface);
+    width: 100%;
+    box-sizing: border-box;
+  }
+  textarea.gt-input {
+    height: auto;
+    min-height: 96px;
+    padding: 12px 14px;
+    line-height: 1.5;
+    resize: vertical;
+  }
+  select.gt-input {
+    padding: 0 10px;
+  }
+  .gt-input::placeholder {
+    color: var(--color-ink-500);
+  }
+  .gt-input[aria-invalid='true'] {
+    border: 2px solid var(--color-error);
+  }
+  .gt-field__hint {
+    font: 400 12px/1.4 var(--font-body);
+    color: var(--color-ink-500);
+  }
+  .gt-field__error {
+    font: 500 12px/1.4 var(--font-body);
+    color: var(--color-error);
+  }
+  .gt-input-prefix {
+    display: flex;
+    align-items: stretch;
+  }
+  .gt-input-prefix > span {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border: 1px solid var(--color-line-300);
+    border-right: 0;
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    background: var(--color-sand-100);
+    font: 500 15px var(--font-body);
+    color: var(--color-ink-700);
+  }
+  .gt-input-prefix > .gt-input {
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  }
+
+  /* Chip */
+  .gt-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-line-300);
+    background: var(--color-surface);
+    color: var(--color-ink-900);
+    font: 600 14px var(--font-body);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .gt-chip[aria-pressed='true'] {
+    background: var(--color-ocean-700);
+    border-color: var(--color-ocean-700);
+    color: var(--color-surface);
+  }
+  .gt-chip--soft[aria-pressed='true'] {
+    background: var(--color-ocean-50);
+    color: var(--color-ocean-700);
+    border-color: var(--color-ocean-700);
+  }
+
+  /* Badge */
+  .gt-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font: 600 12px/1.2 var(--font-body);
+    white-space: nowrap;
+  }
+  .gt-badge--success {
+    background: var(--color-success-50);
+    color: var(--color-success-700);
+  }
+  .gt-badge--info {
+    background: var(--color-info-50);
+    color: var(--color-ocean-700);
+  }
+  .gt-badge--warning {
+    background: var(--color-warning-50);
+    color: var(--color-warning-700);
+  }
+  .gt-badge--danger {
+    background: var(--color-danger-50);
+    color: var(--color-danger-700);
+  }
+  .gt-badge--neutral {
+    background: #eceff1;
+    color: #4a585f;
+  }
+  .gt-badge--accent {
+    background: var(--color-marigold-500);
+    color: var(--color-ink-900);
+  }
+  .gt-badge--tag {
+    background: var(--color-surface);
+    color: var(--color-ink-900);
+  }
+
+  /* Package card */
+  .gt-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-line-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-surface);
+    color: var(--color-ink-900);
+    text-decoration: none;
+  }
+  .gt-card:hover {
+    color: var(--color-ink-900);
+    box-shadow: var(--shadow-card);
+  }
+  .gt-card__media {
+    position: relative;
+    height: 190px;
+    background: var(--color-dest-coast) center / cover no-repeat;
+  }
+  .gt-card__media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(13, 42, 54, 0.6), rgba(13, 42, 54, 0) 45%);
+  }
+  .gt-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .gt-card__tag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 1;
+  }
+  .gt-card__place {
+    position: absolute;
+    left: 14px;
+    bottom: 12px;
+    z-index: 1;
+    color: var(--color-surface);
+    font: 700 24px var(--font-display);
+  }
+  .gt-card__body {
+    padding: 16px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+  .gt-card__title {
+    margin: 0;
+    font: 600 17px/1.35 var(--font-display);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .gt-card__meta {
+    font: 400 13px var(--font-body);
+    color: var(--color-ink-500);
+  }
+  .gt-card__meta b {
+    color: var(--color-ink-900);
+  }
+  .gt-card__foot {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--color-line-200);
+    padding-top: 12px;
+  }
+  .gt-card__from {
+    display: flex;
+    flex-direction: column;
+    font: 400 12px var(--font-body);
+    color: var(--color-ink-500);
+  }
+  .gt-card__price {
+    font: 700 20px var(--font-display);
+    color: var(--color-ink-900);
+  }
+  .gt-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 22px;
+  }
+
+  /* Stepper */
+  .gt-stepper {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .gt-step {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font: 400 13px var(--font-body);
+    color: var(--color-ink-500);
+  }
+  .gt-step::before {
+    content: '';
+    height: 4px;
+    border-radius: 2px;
+    background: #d9d3c8;
+  }
+  .gt-step__row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .gt-step__dot {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: 600 12px var(--font-body);
+    background: var(--color-surface);
+    border: 1px solid #c9c2b5;
+    color: var(--color-ink-500);
+  }
+  .gt-step--done::before,
+  .gt-step--current::before {
+    background: var(--color-ocean-700);
+  }
+  .gt-step--done .gt-step__dot,
+  .gt-step--current .gt-step__dot {
+    background: var(--color-ocean-700);
+    border-color: var(--color-ocean-700);
+    color: var(--color-surface);
+  }
+  .gt-step--current {
+    color: var(--color-ink-900);
+    font-weight: 600;
+  }
+  .gt-stepper-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font: 500 13px var(--font-body);
+    color: var(--color-ink-500);
+  }
+  .gt-stepper-mobile__bar {
+    height: 4px;
+    border-radius: 2px;
+    background: #d9d3c8;
+    overflow: hidden;
+  }
+  .gt-stepper-mobile__bar > span {
+    display: block;
+    height: 100%;
+    background: var(--color-ocean-700);
+  }
+
+  /* WhatsApp message preview */
+  .gt-wa {
+    background: var(--color-whatsapp-wall);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    max-width: 380px;
+  }
+  .gt-wa__head {
+    background: var(--color-whatsapp-header);
+    color: var(--color-surface);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font: 600 13px var(--font-body);
+    margin-bottom: 12px;
+  }
+  .gt-wa__bubble {
+    background: var(--color-whatsapp-bubble);
+    border-radius: 12px 12px 4px 12px;
+    padding: 12px 14px;
+    font: 400 14px/1.55 var(--font-body);
+    color: var(--color-ink-900);
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+  .gt-wa__time {
+    text-align: right;
+    font: 400 11px var(--font-body);
+    color: var(--color-ink-500);
+    margin-top: 4px;
+  }
+
+  /* Site header */
+  .gt-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 24px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-line-200);
+  }
+  .gt-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-ink-900);
+    text-decoration: none;
+    font: 700 20px var(--font-display);
+  }
+  .gt-brand:hover {
+    color: var(--color-ink-900);
+  }
+  .gt-brand b {
+    color: var(--color-ocean-700);
+  }
+  .gt-brand--on-dark,
+  .gt-brand--on-dark:hover {
+    color: var(--color-surface);
+  }
+  .gt-brand--on-dark b {
+    color: var(--color-marigold-500);
+  }
+  .gt-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .gt-nav a {
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    color: var(--color-ink-900);
+    font: 500 14px var(--font-body);
+    text-decoration: none;
+  }
+  .gt-nav a[aria-current='page'] {
+    background: var(--color-ocean-50);
+    color: var(--color-ocean-700);
+  }
+
+  /* KPI card (CMS) */
+  .gt-kpi {
+    background: var(--color-surface);
+    border: 1px solid var(--color-cms-line);
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .gt-kpi__label {
+    font: 400 13px var(--font-body);
+    color: var(--color-ink-500);
+  }
+  .gt-kpi__value {
+    font: 700 28px var(--font-display);
+    color: var(--color-ink-900);
+  }
+  .gt-kpi__note {
+    font: 400 12px var(--font-body);
+    color: var(--color-ink-500);
+  }
+  .gt-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px;
+  }
+
+  /* CMS table */
+  .gt-table-wrap {
+    background: var(--color-surface);
+    border: 1px solid var(--color-cms-line);
+    border-radius: 14px;
+    overflow-x: auto;
+  }
+  .gt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font: 400 14px var(--font-body);
+    color: var(--color-ink-900);
+  }
+  .gt-table th {
+    text-align: left;
+    padding: 12px 16px;
+    background: #f7f9fa;
+    color: var(--color-ink-500);
+    font: 600 12px var(--font-body);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .gt-table td {
+    padding: 14px 16px;
+    border-top: 1px solid #eef1f3;
+    vertical-align: middle;
+  }
+  .gt-table td small {
+    display: block;
+    font-size: 12px;
+    color: var(--color-ink-500);
+  }
+  .gt-table a {
+    color: var(--color-ocean-700);
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+  }
+}

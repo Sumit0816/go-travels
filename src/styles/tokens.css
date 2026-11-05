@@ -1,0 +1,120 @@
+/* Go Travels — generated from src/design/tokens.json by `npm run tokens`. Do not edit. */
+
+@theme static {
+  /* Colour */
+  --color-ocean-50: #EAF2F5;
+  --color-ocean-700: #0B4F6C;
+  --color-ocean-800: #083A50;
+  --color-night-900: #0D2A36;
+  --color-marigold-500: #F2A541;
+  --color-marigold-700: #B5701A;
+  --color-ink-900: #13222B;
+  --color-ink-700: #33434C;
+  --color-ink-500: #5A6872;
+  --color-line-on-dark: #C9D6DC;
+  --color-surface: #FFFFFF;
+  --color-sand-100: #F5F2EC;
+  --color-cms-bg: #F4F6F7;
+  --color-line-200: #E3DED4;
+  --color-line-300: #D5D0C6;
+  --color-cms-line: #E1E6E9;
+  --color-cms-control: #CDD5D9;
+  --color-whatsapp-600: #0F7A4A;
+  --color-whatsapp-header: #075E54;
+  --color-whatsapp-bubble: #DCF5C9;
+  --color-whatsapp-wall: #E9E1D6;
+  --color-success-50: #E3F2E9;
+  --color-success-700: #0F5E3A;
+  --color-info-50: #DDEBF7;
+  --color-warning-50: #F3EEDF;
+  --color-warning-700: #6B5413;
+  --color-danger-50: #FBE4E0;
+  --color-danger-700: #8F2E20;
+  --color-error: #B3261E;
+  --color-dest-coast: #1F7A8C;
+  --color-dest-desert: #A86523;
+  --color-dest-forest: #2F6E4E;
+  --color-dest-romance: #6B4C8A;
+  --color-dest-pilgrim: #8A4B12;
+  --color-dest-mountain: #5B7F95;
+
+  /* Type families (--font-sora / --font-inter are the self-hosted fonts, set in globals.css) */
+  --font-display: var(--font-sora), "Sora", system-ui, sans-serif;
+  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-sans: var(--font-body);
+
+  /* Type scale */
+  --text-display: 64px;
+  --text-display--line-height: 1.05;
+  --text-display--font-weight: 700;
+  --text-display--letter-spacing: -0.01em;
+  --text-h1: 44px;
+  --text-h1--line-height: 1.15;
+  --text-h1--font-weight: 700;
+  --text-h2: 36px;
+  --text-h2--line-height: 1.2;
+  --text-h2--font-weight: 700;
+  --text-h3: 24px;
+  --text-h3--line-height: 1.25;
+  --text-h3--font-weight: 700;
+  --text-h4: 17px;
+  --text-h4--line-height: 1.35;
+  --text-h4--font-weight: 600;
+  --text-price: 20px;
+  --text-price--line-height: 1.2;
+  --text-price--font-weight: 700;
+  --text-body-lg: 17px;
+  --text-body-lg--line-height: 1.6;
+  --text-body-lg--font-weight: 400;
+  --text-body: 15px;
+  --text-body--line-height: 1.6;
+  --text-body--font-weight: 400;
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 1.5;
+  --text-body-sm--font-weight: 400;
+  --text-label: 13px;
+  --text-label--line-height: 1.3;
+  --text-label--font-weight: 600;
+  --text-eyebrow: 13px;
+  --text-eyebrow--line-height: 1.3;
+  --text-eyebrow--font-weight: 600;
+  --text-eyebrow--letter-spacing: 0.14em;
+  --text-caption: 12px;
+  --text-caption--line-height: 1.4;
+  --text-caption--font-weight: 400;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* Shadow */
+  --shadow-card: 0 14px 34px rgba(8,58,80,0.10);
+  --shadow-float: 0 18px 40px rgba(8,58,80,0.16);
+  --shadow-modal: 0 30px 70px rgba(0,0,0,0.30);
+
+  /* Layout */
+  --container-site: 1280px;
+}
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-18: 72px;
+  --size-touch-min: 44px;
+  --size-control-md: 48px;
+  --size-control-lg: 52px;
+  --size-container: 1280px;
+  --text-display-mobile: 36px;
+  --text-h1-mobile: 26px;
+  --text-h2-mobile: 28px;
+  --text-h3-mobile: 20px;
+}
