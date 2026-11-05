@@ -11,6 +11,7 @@ import {
 } from '@/lib/catalog'
 import { normalizeIndianMobile } from '@/lib/format'
 import { nextRequestId } from '@/lib/request-id'
+import { convertEnquiry } from '@/endpoints/enquiries'
 
 const locked = { update: fullWriteOnly('enquiries') }
 
@@ -33,8 +34,12 @@ export const Enquiries: CollectionConfig = {
     ],
     listSearchableFields: ['enquiryId', 'name', 'whatsapp', 'destination'],
     description: 'From "Find Your Perfect Trip", Contact Us and package "Ask on WhatsApp".',
+    components: {
+      views: { list: { Component: '/components/admin/views/EnquiriesInbox#EnquiriesInbox' } },
+    },
   },
   access: assignedAccess('enquiries'),
+  endpoints: [convertEnquiry],
   hooks: {
     beforeChange: [
       async ({ data, operation, req }) => {

@@ -4,6 +4,7 @@ import { adminAccess, fullWriteOnly } from '@/access'
 import { BOOKING_STATUSES, HOTEL_CATEGORIES, WHATSAPP_STATUSES } from '@/lib/catalog'
 import { normalizeIndianMobile } from '@/lib/format'
 import { nextRequestId } from '@/lib/request-id'
+import { exportBookingsCsv, resendBookingAlert } from '@/endpoints/bookings'
 
 /** Fields everyone with booking access may change. Everything else needs "Full". */
 const workflowFields: Field[] = [
@@ -61,9 +62,14 @@ export const Bookings: CollectionConfig = {
     description: 'Every request from the website, and its WhatsApp delivery status.',
   },
   access: adminAccess('bookings'),
+  endpoints: [exportBookingsCsv, resendBookingAlert],
   hooks: {
     beforeChange: [
-      async ({ data, operation, req }) => {
+      async ({ data, operation, originalDoc, req }) => {
+        // Stamp the moment a booking is confirmed ("Confirmed this month" on the dashboard).
+        if (data.status === 'confirmed' && originalDoc?.status !== 'confirmed') {
+          data.confirmedAt = new Date().toISOString()
+        }
         if (operation === 'create' && !data.requestId) {
           data.requestId = await nextRequestId(req.payload, 'booking')
         }
@@ -247,6 +253,13 @@ export const Bookings: CollectionConfig = {
       index: true,
       access: locked,
       admin: { position: 'sidebar', readOnly: true },
+    },
+    {
+      name: 'confirmedAt',
+      type: 'date',
+      index: true,
+      access: locked,
+      admin: { position: 'sidebar', readOnly: true, date: { pickerAppearance: 'dayAndTime' } },
     },
     {
       name: 'source',

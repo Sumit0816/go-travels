@@ -201,6 +201,7 @@ export interface Booking {
   status: 'new' | 'contacted' | 'confirmed' | 'cancelled';
   assignedTo?: (number | null) | User;
   whatsappStatus?: ('notSent' | 'queued' | 'sent' | 'delivered' | 'read' | 'failed') | null;
+  confirmedAt?: string | null;
   source?: ('website' | 'phone' | 'enquiry') | null;
   fromEnquiry?: (number | null) | Enquiry;
   updatedAt: string;
@@ -348,6 +349,7 @@ export interface Package {
   badge?: ('none' | 'bestseller' | 'new' | 'limitedOffer') | null;
   showInPopular?: boolean | null;
   featureOnSlider?: boolean | null;
+  homepage?: string | null;
   /**
    * Lowest hotel price, set automatically.
    */
@@ -637,6 +639,7 @@ export interface Slide {
   imageMobile?: (number | null) | Media;
   showFrom?: string | null;
   showUntil?: string | null;
+  state?: string | null;
   active?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -1059,6 +1062,7 @@ export interface BookingsSelect<T extends boolean = true> {
   status?: T;
   assignedTo?: T;
   whatsappStatus?: T;
+  confirmedAt?: T;
   source?: T;
   fromEnquiry?: T;
   updatedAt?: T;
@@ -1178,6 +1182,7 @@ export interface PackagesSelect<T extends boolean = true> {
   badge?: T;
   showInPopular?: T;
   featureOnSlider?: T;
+  homepage?: T;
   startingPrice?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1253,6 +1258,7 @@ export interface SlidesSelect<T extends boolean = true> {
   imageMobile?: T;
   showFrom?: T;
   showUntil?: T;
+  state?: T;
   active?: T;
   updatedAt?: T;
   createdAt?: T;

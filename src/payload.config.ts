@@ -45,6 +45,9 @@ export default buildConfig({
         Logo: '/components/admin/AdminGraphics#AdminLogo',
         Icon: '/components/admin/AdminGraphics#AdminIcon',
       },
+      views: {
+        dashboard: { Component: '/components/admin/views/Dashboard#Dashboard' },
+      },
     },
     dateFormat: 'dd MMM yyyy',
   },
