@@ -117,3 +117,13 @@ CI checks that every migration applies cleanly to an empty database.
 | Users & site settings | Full  | None    | None        | None           |
 
 The table lives in `src/access/roles.ts`, and `tests/unit/access.test.ts` checks every cell. The first account ever created becomes the Owner.
+
+## WhatsApp alerts
+
+Bookings and enquiries are saved first, then sent to every recipient in **Settings › WhatsApp Integration** (plus a copy to the customer, if that's switched on). Gupshup and Interakt are supported; the code is in `src/lib/whatsapp/`.
+
+- **Without an API key**, development and CI print each message to the server log instead of sending it. In production, a missing key counts as a failed send.
+- **Retries:** a failed send is tried again after 1, 5 and 15 minutes. Something must call `GET /api/whatsapp/process` every minute with `Authorization: Bearer $CRON_SECRET`: `vercel.json` sets this up on Vercel (per-minute crons need a paid plan); on a VPS, use a crontab line (see `.env.example`).
+- **Fallback email:** once every team alert for a booking or enquiry has failed, the message is emailed to the fallback address. Set the `SMTP_*` variables, or emails only go to the server log.
+- **Delivery receipts:** set the webhook URL shown on the "Test & delivery log" tab in the provider's dashboard, so statuses move on to Delivered and Read.
+- **Templates:** each approved Meta template takes its values in the order listed on the "Message templates" tab. For Gupshup, the template name is the template ID.

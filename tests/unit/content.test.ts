@@ -127,3 +127,16 @@ describe('blog helpers', () => {
     expect(readMinutes(richText('word '.repeat(1000)))).toBe(5)
   })
 })
+
+describe('client IP for rate limiting', () => {
+  const h = (init: Record<string, string>) => new Headers(init)
+  it('prefers the proxy-set x-real-ip, then the last forwarded entry', async () => {
+    const { clientIpFrom } = await import('@/lib/client-ip')
+    expect(clientIpFrom(h({ 'x-real-ip': '1.1.1.1', 'x-forwarded-for': '6.6.6.6, 1.1.1.1' }))).toBe(
+      '1.1.1.1',
+    )
+    // A visitor-supplied first entry is ignored.
+    expect(clientIpFrom(h({ 'x-forwarded-for': '6.6.6.6, 2.2.2.2' }))).toBe('2.2.2.2')
+    expect(clientIpFrom(h({}))).toBe('unknown')
+  })
+})

@@ -1637,8 +1637,11 @@ async function main() {
       enquiryTemplate: { name: 'gt_enquiry', language: 'en' },
       customerTemplate: { name: 'gt_booking_copy', language: 'en' },
       reviewTemplate: { name: 'gt_review_link', language: 'en' },
+      apiKeyHint: null,
+      connectionStatus: 'notConnected',
     },
-    context: ctx,
+    // No API key: development sends to the console instead of a real provider.
+    context: { ...ctx, resetWhatsAppKey: true },
   })
   payload.logger.info('Globals: site settings, homepage, menus, WhatsApp settings')
 

@@ -26,6 +26,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { TestimonialsBoard as TestimonialsBoard_7b7b1e1ac67ab6d6ff1861e844180486 } from '../../../components/admin/views/TestimonialsBoard'
 import { BlocksFeatureClient as BlocksFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { RolePermissions as RolePermissions_77b8ea406874778364347f3f81817d6b } from '../../../components/admin/RolePermissions'
+import { WhatsAppTools as WhatsAppTools_6f418b0d7551a61f276ac309a47bacfc } from '../../../components/admin/WhatsAppTools'
 import { AdminIcon as AdminIcon_33c93f4499cc1046be4c39fcd5ae4edf } from '../../../components/admin/AdminGraphics'
 import { AdminLogo as AdminLogo_33c93f4499cc1046be4c39fcd5ae4edf } from '../../../components/admin/AdminGraphics'
 import { Dashboard as Dashboard_86ced07c75806cf3261000d7201be5c2 } from '../../../components/admin/views/Dashboard'
@@ -62,6 +63,7 @@ export const importMap = {
   "/components/admin/views/TestimonialsBoard#TestimonialsBoard": TestimonialsBoard_7b7b1e1ac67ab6d6ff1861e844180486,
   "@payloadcms/richtext-lexical/client#BlocksFeatureClient": BlocksFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/components/admin/RolePermissions#RolePermissions": RolePermissions_77b8ea406874778364347f3f81817d6b,
+  "/components/admin/WhatsAppTools#WhatsAppTools": WhatsAppTools_6f418b0d7551a61f276ac309a47bacfc,
   "/components/admin/AdminGraphics#AdminIcon": AdminIcon_33c93f4499cc1046be4c39fcd5ae4edf,
   "/components/admin/AdminGraphics#AdminLogo": AdminLogo_33c93f4499cc1046be4c39fcd5ae4edf,
   "/components/admin/views/Dashboard#Dashboard": Dashboard_86ced07c75806cf3261000d7201be5c2,

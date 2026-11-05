@@ -3,7 +3,7 @@ import type { Endpoint, Where } from 'payload'
 import { canRead, canUpdateSome } from '@/access'
 import { toCsv } from '@/lib/admin-helpers'
 import { BOOKING_STATUSES, hotelCategoryLabel } from '@/lib/catalog'
-import { queueBookingAlert } from '@/lib/whatsapp/queue'
+import { dispatchBookingAlert } from '@/lib/whatsapp/send'
 
 const role = (u: unknown) => (u as { role?: unknown } | null)?.role
 
@@ -92,7 +92,7 @@ export const exportBookingsCsv: Endpoint = {
   },
 }
 
-/** POST /api/bookings/:id/resend → re-queues the WhatsApp alert. */
+/** POST /api/bookings/:id/resend → sends the team WhatsApp alert again (not the customer copy). */
 export const resendBookingAlert: Endpoint = {
   path: '/:id/resend',
   method: 'post',
@@ -109,7 +109,13 @@ export const resendBookingAlert: Endpoint = {
       overrideAccess: false,
       req,
     })
-    await queueBookingAlert(req.payload, id, (req.user as { name?: string }).name ?? 'staff')
-    return Response.json({ ok: true, whatsappStatus: 'queued' })
+    await dispatchBookingAlert(req.payload, id, { customerCopy: false })
+    const after = await req.payload.findByID({
+      collection: 'bookings',
+      id,
+      depth: 0,
+      overrideAccess: true,
+    })
+    return Response.json({ ok: true, whatsappStatus: after.whatsappStatus })
   },
 }

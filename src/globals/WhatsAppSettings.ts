@@ -3,21 +3,15 @@ import type { GlobalConfig } from 'payload'
 import { canRead, canWrite } from '@/access'
 import { WHATSAPP_PROVIDERS } from '@/lib/catalog'
 import { encryptSecret, isEncryptedSecret } from '@/lib/crypto'
+import {
+  BOOKING_TEMPLATE_VARIABLES,
+  CUSTOMER_TEMPLATE_VARIABLES,
+  ENQUIRY_TEMPLATE_VARIABLES,
+} from '@/lib/whatsapp/messages'
 
-/** Variables available in the booking template, in the order the design shows them. */
-export const BOOKING_TEMPLATE_VARIABLES = [
-  'request_id',
-  'package_name',
-  'duration',
-  'travel_date',
-  'departure_city',
-  'travellers',
-  'hotel_category',
-  'customer_name',
-  'customer_phone',
-  'estimated_total',
-  'special_requests',
-] as const
+export { BOOKING_TEMPLATE_VARIABLES }
+
+const vars = (list: readonly string[]) => list.map((v) => `[${v}]`).join(' ')
 
 const templateGroup = (name: string, label: string, description: string) => ({
   name,
@@ -88,9 +82,14 @@ export const WhatsAppSettings: GlobalConfig = {
               },
               hooks: {
                 // Empty submit keeps the saved key (the form never receives it back).
+                // The seed passes `resetWhatsAppKey` so demo data never calls a real provider.
                 beforeChange: [
-                  ({ value, previousValue }) =>
-                    typeof value === 'string' && value.trim() !== '' ? value : previousValue,
+                  ({ value, previousValue, context }) =>
+                    context?.resetWhatsAppKey
+                      ? null
+                      : typeof value === 'string' && value.trim() !== ''
+                        ? value
+                        : previousValue,
                 ],
               },
             },
@@ -100,7 +99,21 @@ export const WhatsAppSettings: GlobalConfig = {
               type: 'text',
               admin: { readOnly: true, description: 'Last 4 characters of the saved key.' },
             },
-            { name: 'senderNumber', label: 'Business sender number', type: 'text' },
+            {
+              name: 'senderNumber',
+              label: 'Business sender number',
+              type: 'text',
+              admin: { description: 'With country code, e.g. 91 98765 43210.' },
+            },
+            {
+              name: 'appName',
+              label: 'Gupshup app name',
+              type: 'text',
+              admin: {
+                condition: (data) => data?.provider === 'gupshup',
+                description: 'The app name shown in your Gupshup dashboard.',
+              },
+            },
             {
               name: 'connectionStatus',
               type: 'select',
@@ -110,7 +123,7 @@ export const WhatsAppSettings: GlobalConfig = {
                 { label: 'Connected', value: 'connected' },
                 { label: 'Error', value: 'error' },
               ],
-              admin: { readOnly: true, description: 'Updated by "Send test message" (Phase 5).' },
+              admin: { readOnly: true, description: 'Updated by "Send test message".' },
             },
           ],
         },
@@ -163,7 +176,7 @@ export const WhatsAppSettings: GlobalConfig = {
         },
         {
           label: '3 · Message templates',
-          description: `Approved Meta "utility" templates. Booking variables: ${BOOKING_TEMPLATE_VARIABLES.map((v) => `[${v}]`).join(' ')}`,
+          description: `Approved Meta "utility" templates, with values in this order. Booking: ${vars(BOOKING_TEMPLATE_VARIABLES)}. Enquiry: ${vars(ENQUIRY_TEMPLATE_VARIABLES)}. Customer copy: ${vars(CUSTOMER_TEMPLATE_VARIABLES)}. For Gupshup, enter the template ID as the name.`,
           fields: [
             templateGroup(
               'bookingTemplate',
@@ -177,6 +190,16 @@ export const WhatsAppSettings: GlobalConfig = {
               'Sent to the customer when the copy is switched on.',
             ),
             templateGroup('reviewTemplate', 'Review link', 'Sent when staff request a review.'),
+          ],
+        },
+        {
+          label: '4 · Test & delivery log',
+          fields: [
+            {
+              name: 'tools',
+              type: 'ui',
+              admin: { components: { Field: '/components/admin/WhatsAppTools#WhatsAppTools' } },
+            },
           ],
         },
       ],

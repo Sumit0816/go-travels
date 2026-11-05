@@ -329,3 +329,48 @@ export function ReviewLinkForm({
     </form>
   )
 }
+
+/** "Send test message" in WhatsApp Integration: sends the booking template to the primary recipient. */
+export function SendTestMessage() {
+  const { pending, error, run, router } = useAction()
+  const [result, setResult] = useState<string | null>(null)
+  return (
+    <div className="gta-actions" style={{ alignItems: 'center' }}>
+      <button
+        type="button"
+        className="gta-btn gta-btn--whatsapp"
+        disabled={pending}
+        onClick={() =>
+          run(
+            async () => {
+              setResult(null)
+              const res = await fetch('/api/whatsapp/test', {
+                method: 'POST',
+                credentials: 'include',
+              })
+              const body = (await res.json().catch(() => ({}))) as {
+                ok?: boolean
+                error?: string
+                to?: string
+              }
+              if (!body.ok) throw new Error(body.error ?? `Request failed (${res.status})`)
+              return body
+            },
+            (r) => {
+              setResult(
+                `Test message sent to ${(r as { to?: string }).to ?? 'the primary recipient'}.`,
+              )
+              router.refresh()
+            },
+          )
+        }
+      >
+        {pending ? 'Sending…' : 'Send test message'}
+      </button>
+      <span role="status" aria-live="polite">
+        {result && <span className="gta-badge gta-badge--success">{result}</span>}
+        {error && <span className="gta-error">{error}</span>}
+      </span>
+    </div>
+  )
+}

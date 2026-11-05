@@ -1,3 +1,4 @@
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -25,6 +26,7 @@ import { Navigation } from './globals/Navigation'
 import { SiteSettings } from './globals/SiteSettings'
 import { WhatsAppSettings } from './globals/WhatsAppSettings'
 import { migrations } from './migrations'
+import { WHATSAPP_ENDPOINTS } from './endpoints/whatsapp'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -79,6 +81,23 @@ export default buildConfig({
     // After changing collections, run `npm run payload -- migrate:create <name>` and commit the result.
     prodMigrations: migrations,
   }),
+  endpoints: WHATSAPP_ENDPOINTS,
+  // WhatsApp failure emails and password resets. Without SMTP_HOST, emails are printed to the
+  // server log instead (fine for development).
+  email: process.env.SMTP_HOST
+    ? nodemailerAdapter({
+        defaultFromAddress: process.env.EMAIL_FROM || 'bookings@gotravels.in',
+        defaultFromName: 'Go Travels',
+        transportOptions: {
+          host: process.env.SMTP_HOST,
+          port: Number(process.env.SMTP_PORT || 587),
+          secure: Number(process.env.SMTP_PORT) === 465,
+          auth: process.env.SMTP_USER
+            ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+            : undefined,
+        },
+      })
+    : undefined,
   upload: { limits: { fileSize: 10_000_000 } },
   sharp,
   plugins: [

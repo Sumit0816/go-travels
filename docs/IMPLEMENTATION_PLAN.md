@@ -264,12 +264,12 @@ Each milestone = one branch + one PR, reviewed before the next starts. Estimates
 
 **Done when:** every website board in the design renders from CMS data at desktop and 390px widths.
 
-### Phase 5 — Booking & enquiry flows + WhatsApp (≈5 days)
+### Phase 5 — Booking & enquiry flows + WhatsApp (≈5 days) · Built; needs a live provider account to finish
 
 1. Shared Zod schemas; booking stepper (4 steps, state kept in URL/session so Back works and refresh doesn't lose data), adults 1–9 / children 0–6, rooms, add-ons, consent checkbox, Indian 10-digit mobile validation.
-2. Enquiry modal + `/plan-my-trip` + Contact form + Ask on WhatsApp, all → `enquiries`. (`/plan-my-trip` and the Contact form, with honeypot and rate limit, shipped early in Phase 4c; the modal and Ask on WhatsApp remain.)
-3. API routes with rate limiting, honeypot, optional Turnstile.
-4. WhatsApp adapter (Gupshup + Interakt), jobs, retries, email fallback, webhook, message log (§6).
+2. Enquiry modal + `/plan-my-trip` + Contact form + Ask on WhatsApp, all → `enquiries`. (`/plan-my-trip` and the Contact form shipped in Phase 4c; the modal now opens from every Plan My Trip link. Ask on WhatsApp stays a direct chat link, because an enquiry needs the visitor's number and the chat already gives the team that.)
+3. API routes with rate limiting, honeypot, optional Turnstile. (Server actions with honeypot and per-IP limits; Turnstile left for Phase 6 if spam appears.)
+4. WhatsApp adapter (Gupshup + Interakt), jobs, retries, email fallback, webhook, message log (§6). (Retries run from the delivery log via a per-minute cron on `/api/whatsapp/process`, instead of Payload jobs.)
 5. WhatsApp Integration admin screen: provider, encrypted key, sender, recipients, customer copy, email fallback, template preview with variables, **Send test message**, delivery log.
 6. Success and failure screens exactly as the design.
 

@@ -2,10 +2,11 @@
 
 import { headers } from 'next/headers'
 
+import { clientIpFrom, formRateLimit } from '@/lib/client-ip'
 import { payloadClient } from '@/lib/cms'
 import { contactSubjectDetails, parseEnquiry, type FieldErrors } from '@/lib/enquiry'
 import { createRateLimiter } from '@/lib/rate-limit'
-import { queueEnquiryAlert } from '@/lib/whatsapp/queue'
+import { dispatchEnquiryAlert } from '@/lib/whatsapp/send'
 
 export type EnquiryState =
   | { status: 'idle' }
@@ -13,7 +14,7 @@ export type EnquiryState =
   | { status: 'success'; enquiryId: string; name: string }
 
 // 5 enquiries per visitor per 10 minutes.
-const limiter = createRateLimiter({ limit: 5, windowMs: 10 * 60 * 1000 })
+const limiter = createRateLimiter({ limit: formRateLimit(5), windowMs: 10 * 60 * 1000 })
 
 /**
  * Public enquiry forms ("Find Your Perfect Trip", Contact Us). Saves the enquiry in the CMS
@@ -40,9 +41,7 @@ export async function submitEnquiry(
     }
   }
 
-  const h = await headers()
-  const ip =
-    (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || h.get('x-real-ip') || 'unknown'
+  const ip = clientIpFrom(await headers())
   if (!limiter.check(`enquiry:${ip}`)) {
     return {
       status: 'error',
@@ -87,7 +86,11 @@ export async function submitEnquiry(
       },
       overrideAccess: true,
     })
-    await queueEnquiryAlert(payload, enquiry.id)
+    // A failed WhatsApp send still leaves the enquiry saved; retries and the email fallback
+    // take over, so the visitor sees success either way.
+    await dispatchEnquiryAlert(payload, enquiry.id).catch((err) =>
+      payload.logger.error({ err }, `WhatsApp alert for enquiry ${enquiry.id} failed to start`),
+    )
     return { status: 'success', enquiryId: enquiry.enquiryId ?? '', name: d.name }
   } catch (err) {
     console.error('Enquiry could not be saved', err)

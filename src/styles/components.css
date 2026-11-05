@@ -403,7 +403,7 @@
   .gt-wa__time {
     text-align: right;
     font: 400 11px var(--font-body);
-    color: var(--color-ink-500);
+    color: var(--color-ink-700);
     margin-top: 4px;
   }
 
@@ -1229,5 +1229,94 @@
   .gt-tabs a[aria-current] {
     color: var(--color-ocean-700);
     border-bottom-color: var(--color-ocean-700);
+  }
+
+  /* Booking form: add-on checkbox cards and +/- traveller buttons (design: Booking). */
+  .gt-check-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-line-300);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .gt-check-card:has(input:checked) {
+    border-color: var(--color-ocean-700);
+    background: var(--color-ocean-50);
+  }
+  .gt-check-card input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-ocean-700);
+  }
+  .gt-counter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--color-line-300);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-ink-900);
+    font-size: 20px;
+    cursor: pointer;
+  }
+  .gt-counter-btn--add {
+    border-color: var(--color-ocean-700);
+    background: var(--color-ocean-700);
+    color: var(--color-surface);
+  }
+  .gt-counter-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .gt-counter-btn:focus-visible {
+    outline: 3px solid var(--color-marigold-500);
+    outline-offset: 2px;
+  }
+
+  /* Enquiry pop-up (design: EnquiryModal). Full-screen on phones (design: Mobile · Enquiry). */
+  .gt-enquiry {
+    width: min(640px, calc(100vw - 32px));
+    max-width: none;
+    max-height: calc(100dvh - 48px);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+    color: var(--color-ink-900);
+    box-shadow: var(--shadow-modal);
+    overflow-y: auto;
+  }
+  .gt-enquiry::backdrop {
+    background: rgba(13, 42, 54, 0.55);
+  }
+  .gt-enquiry__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 24px;
+  }
+  .gt-enquiry__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  @media (max-width: 767px) {
+    .gt-enquiry {
+      width: 100vw;
+      height: 100dvh;
+      max-height: 100dvh;
+      margin: 0;
+      border-radius: 0;
+    }
+    .gt-enquiry__panel {
+      padding: 16px;
+    }
   }
 }
