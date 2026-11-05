@@ -86,3 +86,8 @@ export function telHref(number: string | null | undefined): string | null {
   const cleaned = (number ?? '').replace(/[^\d+]/g, '')
   return cleaned.length >= 10 ? `tel:${cleaned}` : null
 }
+
+/** Public site origin without a trailing slash, for absolute URLs (share links, JSON-LD). */
+export function siteUrl(): string {
+  return (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/+$/, '')
+}

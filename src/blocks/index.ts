@@ -19,6 +19,25 @@ export const HeroBlock: Block = {
     { name: 'heading', type: 'text', required: true },
     { name: 'intro', type: 'textarea' },
     { name: 'image', type: 'upload', relationTo: 'media' },
+    {
+      name: 'buttons',
+      type: 'array',
+      maxRows: 2,
+      admin: { description: 'Optional, e.g. "Explore Tours" and "Contact Us".' },
+      fields: [
+        { name: 'label', type: 'text', required: true },
+        {
+          name: 'style',
+          type: 'select',
+          defaultValue: 'primary',
+          options: [
+            { label: 'Primary (blue)', value: 'primary' },
+            { label: 'Outline', value: 'outline' },
+          ],
+        },
+        ...linkFields(),
+      ],
+    },
   ],
 }
 
@@ -54,6 +73,16 @@ export const FeaturesBlock: Block = {
   fields: [
     { name: 'eyebrow', type: 'text' },
     { name: 'heading', type: 'text' },
+    {
+      name: 'variant',
+      label: 'Style',
+      type: 'select',
+      defaultValue: 'cards',
+      options: [
+        { label: 'Cards', value: 'cards' },
+        { label: 'Numbered steps', value: 'steps' },
+      ],
+    },
     {
       name: 'items',
       type: 'array',

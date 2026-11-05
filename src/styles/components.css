@@ -1126,7 +1126,7 @@
   .gt-prose li + li {
     margin-top: 0.3em;
   }
-  .gt-prose a {
+  .gt-prose a:not([class]) {
     color: var(--color-ocean-700);
     text-decoration: underline;
   }
@@ -1203,5 +1203,31 @@
     font-weight: 600;
     font-size: 13px;
     text-decoration: none;
+  }
+
+  /* Plain tab row of links (Policies, blog categories). The current one has aria-current. */
+  .gt-tabs {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--color-line-200);
+  }
+  .gt-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .gt-tabs a {
+    flex-shrink: 0;
+    padding: 12px 14px;
+    color: var(--color-ink-500);
+    font: 600 14px var(--font-body);
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+  }
+  .gt-tabs a:hover,
+  .gt-tabs a[aria-current] {
+    color: var(--color-ocean-700);
+    border-bottom-color: var(--color-ocean-700);
   }
 }

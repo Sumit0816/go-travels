@@ -1094,28 +1094,44 @@ async function main() {
         {
           blockType: 'hero',
           eyebrow: 'ABOUT GO TRAVELS',
-          heading: 'Travel planned by real people in Ranchi',
+          heading: "We plan journeys the way we'd want to travel",
           intro:
-            'Domestic, international, honeymoon, religious and MICE tours — planned personally and confirmed on WhatsApp.',
+            'Domestic, international, honeymoon, religious and MICE tours — planned personally by our team in Ranchi and confirmed on WhatsApp.',
           image: img.hills,
+          buttons: [
+            { label: 'Explore Tours', style: 'primary', linkType: 'custom', url: '/tours' },
+            { label: 'Contact Us', style: 'outline', linkType: 'custom', url: '/contact' },
+          ],
         },
         {
           blockType: 'features',
-          eyebrow: 'WHAT WE STAND FOR',
-          heading: 'Why travellers choose us',
+          eyebrow: 'OUR SERVICES',
+          heading: 'Everything for your trip, in one place',
+          variant: 'cards',
           items: [
+            { title: 'Domestic tours', text: 'Hills, beaches and heritage across India.' },
+            { title: 'International tours', text: 'Dubai, Thailand, Bali, Europe and more.' },
+            { title: 'Jharkhand tours', text: 'Waterfalls, forests and temples close to home.' },
+            { title: 'Religious tours', text: 'Char Dham, Deoghar, Puri and other yatras.' },
+            { title: 'Honeymoon packages', text: 'Private stays and romantic extras.' },
+            { title: 'MICE & corporate', text: 'Offsites, conferences and incentive trips.' },
+            { title: 'Hotels & transport', text: 'Stays, cabs and transfers booked for you.' },
+            { title: 'Flights & visa help', text: 'Ticketing and help with visa paperwork.' },
+          ],
+        },
+        {
+          blockType: 'features',
+          eyebrow: 'HOW BOOKING WORKS',
+          heading: 'No online payment — just a conversation',
+          variant: 'steps',
+          items: [
+            { title: 'Choose a package', text: 'Or tell us your idea on the Plan My Trip form.' },
+            { title: 'Send a request', text: 'Pick dates, travellers and hotel category.' },
             {
-              title: 'Planned by experts',
-              text: 'Every itinerary is built and checked by our own team.',
+              title: 'Talk on WhatsApp',
+              text: 'Our expert confirms availability and the final quote.',
             },
-            {
-              title: 'Honest quotes',
-              text: 'Transparent, all-inclusive quotes with no hidden fees.',
-            },
-            {
-              title: 'Confirmed on WhatsApp',
-              text: 'No online payment. We confirm availability and share details directly.',
-            },
+            { title: 'Travel', text: 'Get your vouchers and itinerary, then enjoy the trip.' },
           ],
         },
         {
@@ -1176,6 +1192,24 @@ async function main() {
             legalNote,
             'Prices shown on the website are estimates per person on twin sharing. The final price is confirmed by our travel expert on WhatsApp. No payment is taken on the website.',
             'Cancellation terms are listed on each package page.',
+          ),
+        },
+      ],
+    },
+    {
+      title: 'Booking & Cancellation',
+      slug: 'booking-policy',
+      layout: [
+        {
+          blockType: 'richText',
+          content: richText(
+            legalNote,
+            h2('How booking works'),
+            'A booking request on the website is not a confirmed booking. Our travel expert confirms availability, the final price and the payment schedule on WhatsApp.',
+            h2('Payments'),
+            'No payment is taken on the website. Payment details are shared only by our team, from our official number.',
+            h2('Cancellation'),
+            'Cancellation charges depend on the package, hotels and airlines involved, and are listed on each package page and in your confirmation.',
           ),
         },
       ],

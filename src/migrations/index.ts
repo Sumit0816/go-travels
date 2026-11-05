@@ -1,6 +1,7 @@
 import * as migration_20261105_075647_initial from './20261105_075647_initial';
 import * as migration_20261105_082652_booking_confirmed_at from './20261105_082652_booking_confirmed_at';
 import * as migration_20261105_103715_destination_page_content from './20261105_103715_destination_page_content';
+import * as migration_20261105_120005_page_blocks_buttons_variant from './20261105_120005_page_blocks_buttons_variant';
 
 export const migrations = [
   {
@@ -16,6 +17,11 @@ export const migrations = [
   {
     up: migration_20261105_103715_destination_page_content.up,
     down: migration_20261105_103715_destination_page_content.down,
-    name: '20261105_103715_destination_page_content'
+    name: '20261105_103715_destination_page_content',
+  },
+  {
+    up: migration_20261105_120005_page_blocks_buttons_variant.up,
+    down: migration_20261105_120005_page_blocks_buttons_variant.down,
+    name: '20261105_120005_page_blocks_buttons_variant'
   },
 ];

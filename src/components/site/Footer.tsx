@@ -130,7 +130,8 @@ export function Footer({
           </span>
           <span>
             <FooterLink href="/privacy">Privacy Policy</FooterLink> |{' '}
-            <FooterLink href="/terms">Terms &amp; Conditions</FooterLink>
+            <FooterLink href="/terms">Terms &amp; Conditions</FooterLink> |{' '}
+            <FooterLink href="/booking-policy">Booking &amp; Cancellation</FooterLink>
           </span>
         </div>
       </div>

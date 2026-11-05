@@ -717,6 +717,25 @@ export interface Page {
         heading: string;
         intro?: string | null;
         image?: (number | null) | Media;
+        /**
+         * Optional, e.g. "Explore Tours" and "Contact Us".
+         */
+        buttons?:
+          | {
+              label: string;
+              style?: ('primary' | 'outline') | null;
+              linkType: 'category' | 'destination' | 'package' | 'page' | 'custom';
+              category?: (number | null) | Category;
+              destination?: (number | null) | Destination;
+              package?: (number | null) | Package;
+              page?: (number | null) | Page;
+              /**
+               * A path like /tours/domestic or a full https:// link.
+               */
+              url?: string | null;
+              id?: string | null;
+            }[]
+          | null;
         id?: string | null;
         blockName?: string | null;
         blockType: 'hero';
@@ -760,6 +779,7 @@ export interface Page {
     | {
         eyebrow?: string | null;
         heading?: string | null;
+        variant?: ('cards' | 'steps') | null;
         items?:
           | {
               title: string;
@@ -1436,6 +1456,19 @@ export interface PagesSelect<T extends boolean = true> {
               heading?: T;
               intro?: T;
               image?: T;
+              buttons?:
+                | T
+                | {
+                    label?: T;
+                    style?: T;
+                    linkType?: T;
+                    category?: T;
+                    destination?: T;
+                    package?: T;
+                    page?: T;
+                    url?: T;
+                    id?: T;
+                  };
               id?: T;
               blockName?: T;
             };
@@ -1465,6 +1498,7 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               eyebrow?: T;
               heading?: T;
+              variant?: T;
               items?:
                 | T
                 | {
