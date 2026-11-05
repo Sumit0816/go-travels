@@ -32,6 +32,8 @@ jobs:
     env:
       DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/go_travels
       PAYLOAD_SECRET: ci-only-secret-not-used-in-production
+      # Throwaway key for CI only (encrypts the test WhatsApp API key in integration tests).
+      WHATSAPP_ENC_KEY: 0000000000000000000000000000000000000000000000000000000000000001
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       NEXT_TELEMETRY_DISABLED: 1
 
@@ -56,6 +58,14 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+      - name: Integration tests (Postgres)
+        run: npm run test:int
+
+      - name: Migrations apply to an empty database
+        run: |
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -c 'CREATE DATABASE go_travels_migrate'
+          DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/go_travels_migrate npm run payload -- migrate
 
       - name: Build
         run: npm run build
