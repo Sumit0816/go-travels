@@ -2,6 +2,11 @@
 @import './tokens.css';
 @import './components.css';
 
+/* Extra breakpoint where the full desktop menu fits (between xl 1280 and 2xl 1536). */
+@theme {
+  --breakpoint-nav: 85.375rem; /* 1366px */
+}
+
 /* Self-hosted font families (from @fontsource-variable, imported in the site layout). */
 :root {
   --font-sora: 'Sora Variable';
@@ -102,7 +107,9 @@
   font-weight: var(--text-eyebrow--font-weight);
   letter-spacing: var(--text-eyebrow--letter-spacing);
   text-transform: uppercase;
-  color: var(--color-marigold-700);
+  /* A shade darker than marigold-700 (#B5701A, 3.96:1): this passes WCAG AA 4.5:1 for 13px text
+     on both white (5.2:1) and sand-100 (4.7:1). */
+  color: #9a5f15;
 }
 
 /* Page container: 1280px max, 16px gutters on mobile, 24px on desktop. */

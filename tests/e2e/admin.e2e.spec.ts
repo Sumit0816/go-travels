@@ -21,8 +21,8 @@ test.describe('Admin Panel', () => {
   test('can navigate to dashboard', async () => {
     await page.goto('http://localhost:3000/admin')
     await expect(page).toHaveURL('http://localhost:3000/admin')
-    const dashboardArtifact = page.locator('span[title="Dashboard"]').first()
-    await expect(dashboardArtifact).toBeVisible()
+    // Custom dashboard (Phase 3): Owners see the bookings overview.
+    await expect(page.getByRole('heading', { level: 1, name: 'Bookings' })).toBeVisible()
   })
 
   test('can navigate to list view', async () => {

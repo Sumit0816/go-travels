@@ -47,18 +47,16 @@ export function Logo({
   className,
 }: LogoProps) {
   return (
-    <Link
-      href={href}
-      className={cn('gt-brand', onDark && 'gt-brand--on-dark', className)}
-      aria-label="Go Travels home"
-    >
+    <Link href={href} className={cn('gt-brand', onDark && 'gt-brand--on-dark', className)}>
       <LogoMark size={size} onDark={onDark} />
       <span className="flex flex-col leading-tight">
         <span>
           <b>Go</b> Travels
         </span>
         {tagline && (
+          // Decorative: the link's accessible name is the visible "Go Travels".
           <span
+            aria-hidden="true"
             className={cn(
               'text-[10px] font-semibold tracking-[0.14em] text-ink-500',
               taglineClassName,

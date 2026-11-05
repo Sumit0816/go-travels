@@ -56,7 +56,7 @@ export function SiteHeader({
       </div>
       <header className="gt-header">
         <Logo tagline="DISCOVER · DREAM · TRAVEL" taglineClassName="hidden sm:block" />
-        <nav className="gt-nav hidden min-[1366px]:flex" aria-label="Main">
+        <nav className="gt-nav hidden nav:flex" aria-label="Main">
           {nav.map((item) => (
             <Link
               key={item.href}
@@ -72,12 +72,7 @@ export function SiteHeader({
           <Button href="/plan-my-trip" variant="accent" size="sm" className="hidden sm:inline-flex">
             Plan My Trip
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label="Open menu"
-            className="min-[1366px]:hidden"
-          >
+          <Button variant="outline" size="icon" aria-label="Open menu" className="nav:hidden">
             <Icon name="menu" />
           </Button>
         </div>

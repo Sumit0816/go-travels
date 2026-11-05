@@ -12,7 +12,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     services:
       postgres:
@@ -67,5 +67,14 @@ jobs:
           PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -c 'CREATE DATABASE go_travels_migrate'
           DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/go_travels_migrate npm run payload -- migrate
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests (desktop + mobile)
+        run: npm run test:e2e
+
+      # Pages are prerendered from the CMS, so build against the migrated database (as production does).
       - name: Build
         run: npm run build
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/go_travels_migrate
