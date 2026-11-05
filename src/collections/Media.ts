@@ -9,6 +9,8 @@ import { revalidateHooks } from '@/fields'
  * Media library. Uploads are converted to WebP and resized into the sizes the site uses.
  * Stored on local disk in development, or in an S3-compatible bucket when S3_BUCKET is set.
  */
+const WEBP = { format: 'webp' as const, options: { quality: 82 } }
+
 export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: 'Image', plural: 'Media Library' },
@@ -29,13 +31,14 @@ export const Media: CollectionConfig = {
     crop: true,
     adminThumbnail: 'thumbnail',
     resizeOptions: { width: 2400, withoutEnlargement: true },
-    formatOptions: { format: 'webp', options: { quality: 82 } },
+    formatOptions: WEBP,
+    // Every size is WebP too (formatOptions above only applies to the original file).
     imageSizes: [
-      { name: 'thumbnail', width: 400, height: 300, position: 'centre' },
-      { name: 'card', width: 800, height: 600, position: 'centre' },
-      { name: 'hero', width: 1920, height: 720, position: 'centre' },
-      { name: 'heroMobile', width: 780, height: 900, position: 'centre' },
-      { name: 'og', width: 1200, height: 630, position: 'centre' },
+      { name: 'thumbnail', width: 400, height: 300, position: 'centre', formatOptions: WEBP },
+      { name: 'card', width: 800, height: 600, position: 'centre', formatOptions: WEBP },
+      { name: 'hero', width: 1920, height: 720, position: 'centre', formatOptions: WEBP },
+      { name: 'heroMobile', width: 780, height: 900, position: 'centre', formatOptions: WEBP },
+      { name: 'og', width: 1200, height: 630, position: 'centre', formatOptions: WEBP },
     ],
   },
   fields: [

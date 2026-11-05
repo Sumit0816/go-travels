@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import './tokens.css';
 @import './components.css';
+@import './package.css';
 
 /* Extra breakpoint where the full desktop menu fits (between xl 1280 and 2xl 1536). */
 @theme {

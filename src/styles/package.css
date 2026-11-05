@@ -1,0 +1,322 @@
+/* Package detail page (Phase 4b). Imported by globals.css. */
+@layer components {
+  .gt-gallery {
+    position: relative;
+    display: grid;
+    gap: 8px;
+    height: 300px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .gt-gallery--empty {
+    height: 220px;
+  }
+  .gt-gallery__item {
+    position: relative;
+    padding: 0;
+    border: 0;
+    background: var(--color-sand-100);
+    cursor: zoom-in;
+    overflow: hidden;
+  }
+  .gt-gallery__item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+  .gt-gallery__item:hover img {
+    transform: scale(1.03);
+  }
+  .gt-gallery__caption {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    background: rgba(19, 34, 43, 0.75);
+    color: var(--color-surface);
+    font-size: 12px;
+  }
+  .gt-gallery__more {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(19, 34, 43, 0.55);
+    color: var(--color-surface);
+    font: 600 16px var(--font-body);
+  }
+  .gt-gallery__count {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: var(--color-ink-900);
+    color: var(--color-surface);
+    font-size: 12px;
+  }
+  /* Phones show one photo; the rest are in the viewer. */
+  .gt-gallery > .gt-gallery__item:not(:first-child) {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .gt-gallery {
+      height: 440px;
+    }
+    .gt-gallery > .gt-gallery__item:not(:first-child) {
+      display: block;
+    }
+    .gt-gallery--2 {
+      grid-template-columns: 2fr 1fr;
+    }
+    .gt-gallery--3 {
+      grid-template-columns: 2fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    .gt-gallery--3 > :first-child {
+      grid-row: span 2;
+    }
+    .gt-gallery--4,
+    .gt-gallery--5 {
+      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    .gt-gallery--4 > :first-child,
+    .gt-gallery--5 > :first-child {
+      grid-row: span 2;
+    }
+    .gt-gallery--4 > :last-child {
+      grid-column: span 2;
+    }
+  }
+
+  .gt-lightbox {
+    width: 100vw;
+    height: 100dvh;
+    max-width: 100vw;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 24px 64px;
+    border: 0;
+    background: rgba(13, 42, 54, 0.96);
+  }
+  .gt-lightbox::backdrop {
+    background: rgba(13, 42, 54, 0.96);
+  }
+  .gt-lightbox__btn {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid #5e8fa3;
+    background: var(--color-ocean-800);
+    color: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .gt-lightbox__close {
+    top: 16px;
+    right: 16px;
+  }
+  .gt-lightbox__prev {
+    left: 8px;
+    top: 50%;
+  }
+  .gt-lightbox__next {
+    right: 8px;
+    top: 50%;
+  }
+
+  .gt-section-tabs {
+    position: sticky;
+    top: 72px;
+    z-index: 20;
+    margin-top: 24px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-line-200);
+  }
+  .gt-section-tabs a {
+    flex-shrink: 0;
+    padding: 14px 12px;
+    color: var(--color-ink-500);
+    font: 600 14px var(--font-body);
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+  }
+  .gt-section-tabs a:hover {
+    color: var(--color-ocean-700);
+    border-bottom-color: var(--color-ocean-700);
+  }
+  .gt-anchor {
+    scroll-margin-top: 140px;
+  }
+
+  .gt-accordion {
+    border: 1px solid var(--color-line-200);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+  .gt-accordion summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 12px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  .gt-accordion summary::-webkit-details-marker {
+    display: none;
+  }
+  .gt-accordion summary::after {
+    content: '\25BE';
+    margin-left: auto;
+    color: var(--color-ink-500);
+    transition: transform 0.2s;
+  }
+  .gt-accordion[open] summary::after {
+    transform: rotate(180deg);
+  }
+  .gt-accordion > p {
+    margin: 0;
+    padding: 0 16px 16px;
+    color: var(--color-ink-700);
+    line-height: 1.65;
+  }
+
+  .gt-itinerary {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .gt-itinerary__day {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--color-ocean-700);
+    color: var(--color-surface);
+    font: 600 11px var(--font-body);
+    letter-spacing: 0.06em;
+  }
+  .gt-itinerary .gt-accordion > p {
+    padding-left: 78px;
+  }
+  @media (max-width: 639px) {
+    .gt-itinerary .gt-accordion > p {
+      padding-left: 16px;
+    }
+  }
+
+  .gt-incl {
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .gt-incl ul {
+    margin: 10px 0 0;
+    padding-left: 20px;
+    color: var(--color-ink-700);
+    line-height: 1.8;
+  }
+  .gt-incl--yes {
+    border: 1px solid #cfe3d7;
+    background: #f1f8f4;
+  }
+  .gt-incl--yes h2 {
+    color: var(--color-success-700);
+  }
+  .gt-incl--no {
+    border: 1px solid #f0d3ce;
+    background: #fcf3f1;
+  }
+  .gt-incl--no h2 {
+    color: var(--color-danger-700);
+  }
+
+  .gt-hotel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    border: 1px solid var(--color-line-300);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+  .gt-hotel--on {
+    border: 2px solid var(--color-ocean-700);
+    background: #f3f8fa;
+    padding: 15px;
+  }
+  .gt-hotel:has(input:focus-visible) {
+    outline: 3px solid var(--color-marigold-500);
+    outline-offset: 2px;
+  }
+
+  .gt-booking-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px;
+    border: 1px solid var(--color-line-200);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+  }
+  .gt-btn--wa-outline {
+    border-color: var(--color-whatsapp-600);
+    color: var(--color-whatsapp-600);
+  }
+  .gt-btn--wa-outline:hover {
+    border-color: var(--color-whatsapp-600);
+    color: var(--color-whatsapp-600);
+    background: #f1f8f4;
+  }
+
+  .gt-package-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 31;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-line-200);
+    box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.06);
+  }
+  /* On package pages this bar replaces the site-wide Call / WhatsApp / Enquire bar. */
+  body:has(.gt-package-bar) .gt-action-bar {
+    display: none;
+  }
+}
+
+/* "Download PDF" prints the package without site chrome. */
+@media print {
+  header,
+  footer,
+  .gt-section-tabs,
+  .gt-action-bar,
+  .gt-package-bar,
+  .gt-side-tab,
+  .gt-fab,
+  .bg-ocean-800 {
+    display: none !important;
+  }
+  body {
+    padding: 0 !important;
+  }
+  .gt-package .gt-gallery {
+    height: 260px;
+  }
+}

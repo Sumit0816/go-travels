@@ -40,7 +40,7 @@ Requirements: Node 22.23+ or 24.22+, npm.
    npm run seed
    ```
 
-   It signs in four demo users, one per role, with that password: `rajesh@gotravels.in` (Owner), `priya@gotravels.in` (Manager), `rohit@gotravels.in` (Sales) and `pooja@gotravels.in` (Content Editor). Re-running it resets all content but never deletes other accounts.
+   Restart `npm run dev` afterwards if it was running (the site caches CMS data). It creates four demo users, one per role, with that password: `rajesh@gotravels.in` (Owner), `priya@gotravels.in` (Manager), `rohit@gotravels.in` (Sales) and `pooja@gotravels.in` (Content Editor). Re-running it resets all content but never deletes other accounts.
 
 5. Start the app:
 

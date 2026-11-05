@@ -399,6 +399,61 @@ export interface Destination {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * The strip under the page title. Leave a fact empty to hide it.
+   */
+  facts?: {
+    /**
+     * e.g. November – February
+     */
+    bestTime?: string | null;
+    /**
+     * e.g. 3 – 5 nights
+     */
+    idealDuration?: string | null;
+    /**
+     * e.g. Dabolim (GOI) · Mopa (GOX)
+     */
+    nearestAirports?: string | null;
+  };
+  places?:
+    | {
+        name: string;
+        text?: string | null;
+        image?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Months you leave out are shown without a rating.
+   */
+  seasons?: {
+    bestMonths?:
+      ('jan' | 'feb' | 'mar' | 'apr' | 'may' | 'jun' | 'jul' | 'aug' | 'sep' | 'oct' | 'nov' | 'dec')[] | null;
+    /**
+     * e.g. pleasant, peak season
+     */
+    bestNote?: string | null;
+    goodMonths?:
+      ('jan' | 'feb' | 'mar' | 'apr' | 'may' | 'jun' | 'jul' | 'aug' | 'sep' | 'oct' | 'nov' | 'dec')[] | null;
+    /**
+     * e.g. warm, fewer crowds
+     */
+    goodNote?: string | null;
+    offMonths?:
+      ('jan' | 'feb' | 'mar' | 'apr' | 'may' | 'jun' | 'jul' | 'aug' | 'sep' | 'oct' | 'nov' | 'dec')[] | null;
+    /**
+     * e.g. green, many beach shacks closed
+     */
+    offNote?: string | null;
+  };
+  faqs?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
   hasPage?: boolean | null;
   /**
    * Leave empty to use the title and the site defaults.
@@ -1202,6 +1257,38 @@ export interface DestinationsSelect<T extends boolean = true> {
   heroImage?: T;
   intro?: T;
   description?: T;
+  facts?:
+    | T
+    | {
+        bestTime?: T;
+        idealDuration?: T;
+        nearestAirports?: T;
+      };
+  places?:
+    | T
+    | {
+        name?: T;
+        text?: T;
+        image?: T;
+        id?: T;
+      };
+  seasons?:
+    | T
+    | {
+        bestMonths?: T;
+        bestNote?: T;
+        goodMonths?: T;
+        goodNote?: T;
+        offMonths?: T;
+        offNote?: T;
+      };
+  faqs?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
   hasPage?: T;
   seo?:
     | T
