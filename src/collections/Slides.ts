@@ -3,6 +3,7 @@ import type { CollectionConfig, Where } from 'payload'
 import { hiddenWithout, publicContentAccess } from '@/access'
 import { CACHE_TAGS } from '@/lib/revalidate'
 import { linkFields, revalidateHooks } from '@/fields'
+import { slideState } from '@/lib/admin-helpers'
 
 /** Active slides inside their show-from / show-until window. */
 export const liveSlidesWhere = (): Where => {
@@ -24,7 +25,7 @@ export const Slides: CollectionConfig = {
   admin: {
     useAsTitle: 'heading',
     group: 'Content',
-    defaultColumns: ['heading', 'eyebrow', 'active', 'showFrom', 'showUntil'],
+    defaultColumns: ['heading', 'state', 'showFrom', 'showUntil'],
     description: 'Hero slides at the top of the homepage.',
     hidden: hiddenWithout('homepage'),
   },
@@ -60,6 +61,21 @@ export const Slides: CollectionConfig = {
         { name: 'showFrom', type: 'date', admin: { width: '50%' } },
         { name: 'showUntil', type: 'date', admin: { width: '50%' } },
       ],
+    },
+    {
+      name: 'state',
+      label: 'Showing',
+      type: 'text',
+      virtual: true,
+      admin: { hidden: true },
+      hooks: {
+        afterRead: [
+          ({ siblingData }) =>
+            ({ live: 'Live', scheduled: 'Scheduled', ended: 'Ended', hidden: 'Hidden' })[
+              slideState(siblingData)
+            ],
+        ],
+      },
     },
     {
       name: 'active',

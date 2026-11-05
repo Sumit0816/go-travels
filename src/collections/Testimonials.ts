@@ -13,6 +13,9 @@ export const Testimonials: CollectionConfig = {
     group: 'Content',
     defaultColumns: ['name', 'tripLabel', 'rating', 'source', 'status', 'createdAt'],
     description: 'Only approved reviews appear in "What Our Clients Say".',
+    components: {
+      views: { list: { Component: '/components/admin/views/TestimonialsBoard#TestimonialsBoard' } },
+    },
   },
   access: publicContentAccess('testimonials', { status: { equals: 'approved' } }),
   hooks: revalidateHooks([CACHE_TAGS.testimonials]),

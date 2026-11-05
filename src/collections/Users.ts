@@ -24,6 +24,7 @@ export const Users: CollectionConfig = {
     description: 'Who can sign in to the CMS, and what they can change.',
     // Staff reach their own profile from the account menu; only the Owner manages users.
     hidden: ({ user }) => user?.role !== 'owner',
+    components: { beforeListTable: ['/components/admin/RolePermissions#RolePermissions'] },
   },
   access: {
     // Only staff with a valid role may open the admin panel.

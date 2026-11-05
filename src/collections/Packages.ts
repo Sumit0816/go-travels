@@ -23,6 +23,7 @@ export const Packages: CollectionConfig = {
       'categories',
       'durationNights',
       'startingPrice',
+      'homepage',
       'status',
       'updatedAt',
     ],
@@ -312,6 +313,21 @@ export const Packages: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       admin: { position: 'sidebar' },
+    },
+    {
+      name: 'homepage',
+      label: 'Homepage',
+      type: 'text',
+      virtual: true,
+      admin: { hidden: true },
+      hooks: {
+        afterRead: [
+          ({ siblingData }) =>
+            [siblingData.showInPopular && 'Popular', siblingData.featureOnSlider && 'Slider']
+              .filter(Boolean)
+              .join(' · ') || '—',
+        ],
+      },
     },
     {
       name: 'startingPrice',

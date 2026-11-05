@@ -228,7 +228,7 @@ Each milestone = one branch + one PR, reviewed before the next starts. Estimates
 
 **Done when:** `npm run dev` serves a styled placeholder home and `/admin` login; CI is green.
 
-### Phase 2 — CMS data model & roles (≈4 days) · Done
+### Phase 2 — CMS data model & roles (≈4 days) · Done ([PR #2](https://github.com/Sumit0816/go-travels/pull/2))
 
 1. All collections and globals from §5 with validation, slugs, admin list columns and filters.
 2. Access control matrix (§5.3) + unit tests for every cell.
@@ -239,7 +239,7 @@ Each milestone = one branch + one PR, reviewed before the next starts. Estimates
 
 **Done when:** an Owner can create a full package in the admin; each role sees only what the matrix allows; seed fills every screen.
 
-### Phase 3 — Admin custom views (≈4 days)
+### Phase 3 — Admin custom views (≈4 days) · Done
 
 1. **Dashboard & Bookings:** KPI cards, status tabs (All/New/Contacted/Confirmed/Cancelled), search, table with WhatsApp status badges, inline status select, Resend, CSV export, pagination, sidebar badge for new bookings.
 2. **Enquiries inbox:** Open/Mine/Closed list + detail panel, status, assignee, internal notes, Reply on WhatsApp / Call, **Convert to booking**.
