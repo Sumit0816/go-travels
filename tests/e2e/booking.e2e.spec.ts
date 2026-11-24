@@ -27,6 +27,7 @@ test.describe('Booking', () => {
     // Many steps, and the first booking after a fresh start compiles the page and the action.
     test.setTimeout(120_000)
     await page.goto('/packages/goa-beach-escape/book?adults=2&children=1&hotel=deluxe4')
+    await page.locator('[data-ready]').waitFor()
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Trip details')
     await expect(page.getByLabel('Hotel category')).toHaveValue('deluxe4')
     await expect(page.locator('output[aria-label="Children"]')).toHaveText('1')

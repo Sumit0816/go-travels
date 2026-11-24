@@ -1,11 +1,15 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import { Icon } from '@/components/ui/Icon'
 
-import { TripFinderForm } from './EnquiryForms'
+// Loaded when the pop-up first opens, so pages don't pay for the form up front.
+const TripFinderForm = dynamic(() => import('./EnquiryForms').then((m) => m.TripFinderForm), {
+  loading: () => <p className="m-0 text-body-sm text-ink-500">Loading…</p>,
+})
 
 type Defaults = { destination?: string; tripType?: string; packageSlug?: string; month?: string }
 

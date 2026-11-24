@@ -4,7 +4,14 @@ import { useRef, useState } from 'react'
 
 import { Icon } from '@/components/ui/Icon'
 
-export type GalleryImage = { src: string; full: string; alt: string; position: string }
+export type GalleryImage = {
+  src: string
+  full: string
+  alt: string
+  position: string
+  srcSet?: string
+  sizes?: string
+}
 
 /**
  * Package gallery: one large and four small photos, "+N photos" opens a full-screen viewer
@@ -54,6 +61,8 @@ export function Gallery({
             {/* eslint-disable-next-line @next/next/no-img-element -- CMS image sized by the grid */}
             <img
               src={img.src}
+              srcSet={img.srcSet}
+              sizes={img.sizes}
               alt=""
               loading={i === 0 ? 'eager' : 'lazy'}
               fetchPriority={i === 0 ? 'high' : 'auto'}

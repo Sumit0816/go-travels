@@ -26,6 +26,7 @@ import { Navigation } from './globals/Navigation'
 import { SiteSettings } from './globals/SiteSettings'
 import { WhatsAppSettings } from './globals/WhatsAppSettings'
 import { migrations } from './migrations'
+import { health } from './endpoints/health'
 import { WHATSAPP_ENDPOINTS } from './endpoints/whatsapp'
 
 const filename = fileURLToPath(import.meta.url)
@@ -52,6 +53,8 @@ export default buildConfig({
       },
     },
     dateFormat: 'dd MMM yyyy',
+    // Built-in avatar: no requests to Gravatar (keeps staff emails private and the CSP strict).
+    avatar: 'default',
   },
   // Sidebar order follows the CMS design: Overview → Content → Settings.
   collections: [
@@ -81,7 +84,7 @@ export default buildConfig({
     // After changing collections, run `npm run payload -- migrate:create <name>` and commit the result.
     prodMigrations: migrations,
   }),
-  endpoints: WHATSAPP_ENDPOINTS,
+  endpoints: [health, ...WHATSAPP_ENDPOINTS],
   // WhatsApp failure emails and password resets. Without SMTP_HOST, emails are printed to the
   // server log instead (fine for development).
   email: process.env.SMTP_HOST

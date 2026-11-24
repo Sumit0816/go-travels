@@ -25,6 +25,7 @@ import {
   type Variables,
 } from './messages'
 import { combineStatuses, nextAttemptAt, type LogStatus, type ParentStatus } from './status'
+import { reportError } from '@/lib/monitoring'
 
 type Kind = MessageLog['kind']
 
@@ -204,6 +205,9 @@ export async function refreshParent(
     context: { disableRevalidate: true },
   })
   if (status === 'failed') {
+    await reportError(new Error(`Every WhatsApp alert for ${log.reference} failed`), 'whatsapp', {
+      errors: latestRound.map((l) => l.error),
+    })
     await sendFallbackEmail(
       payload,
       settings ?? (await loadWhatsAppSettings(payload)).settings,
@@ -241,7 +245,7 @@ async function sendFallbackEmail(
       ].join('\n'),
     })
   } catch (err) {
-    payload.logger.error({ err }, `Fallback email for ${reference} could not be sent`)
+    await reportError(err, 'fallback-email', { reference })
   }
 }
 

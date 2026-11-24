@@ -6,6 +6,7 @@ import { deliveryRate } from '@/lib/admin-helpers'
 import { BOOKING_STATUSES } from '@/lib/catalog'
 import { formatINR, formatIndianMobile, formatTravellers } from '@/lib/format'
 import { bookingsWhere } from '@/endpoints/bookings'
+import { kickDueRetries } from '@/lib/whatsapp/kick'
 import type { User } from '@/payload-types'
 
 import { ActionButton, FieldSelect } from '../client'
@@ -117,6 +118,8 @@ async function contentKpis(payload: Payload, user: User) {
 /** CMS home: KPI cards and the bookings table (design: "CMS · Dashboard & bookings"). */
 export async function Dashboard({ initPageResult, searchParams }: AdminViewServerProps) {
   const { payload } = initPageResult.req
+  // Staff open the dashboard often: a good moment to send any WhatsApp retries that are due.
+  kickDueRetries(payload)
   const user = initPageResult.req.user as User
   const role = user?.role
   const showBookings = canRead('bookings', role)

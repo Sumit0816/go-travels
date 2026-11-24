@@ -1,13 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState, useState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 
 import { submitEnquiry, type EnquiryState } from '@/app/(site)/actions'
 import { Icon } from '@/components/ui/Icon'
+import { track } from '@/lib/analytics'
 import { SelectField, TextAreaField, TextField } from '@/components/ui/TextField'
-import { BUDGETS, TRAVELLER_GROUPS, TRIP_TYPES } from '@/lib/catalog'
-import { CONTACT_SUBJECTS } from '@/lib/enquiry'
+import { BUDGETS, CONTACT_SUBJECTS, TRAVELLER_GROUPS, TRIP_TYPES } from '@/lib/catalog'
 
 const initial: EnquiryState = { status: 'idle' }
 
@@ -45,11 +45,16 @@ function Success({
   state,
   whatsappHref,
   onReset,
+  form,
 }: {
+  form: 'tripFinder' | 'contactForm'
   state: Extract<EnquiryState, { status: 'success' }>
   whatsappHref: string | null
   onReset: () => void
 }) {
+  useEffect(() => {
+    if (state.enquiryId) track('enquiry_submit', { form })
+  }, [state.enquiryId, form])
   const wa = whatsappHref
     ? `${whatsappHref.split('?')[0]}?text=${encodeURIComponent(`Hi Go Travels, this is ${state.name} about my enquiry ${state.enquiryId}.`)}`
     : null
@@ -105,7 +110,7 @@ export function TripFinderForm({
   const [tripType, setTripType] = useState(defaults?.tripType ?? '')
 
   if (showSuccess && state.status === 'success') {
-    return <Success state={state} whatsappHref={whatsappHref} onReset={reset} />
+    return <Success state={state} whatsappHref={whatsappHref} onReset={reset} form="tripFinder" />
   }
   const values = state.status === 'error' ? (state.values ?? {}) : {}
   const errors = state.status === 'error' ? (state.errors ?? {}) : {}
@@ -211,7 +216,7 @@ export function ContactForm({ whatsappHref }: { whatsappHref: string | null }) {
   const { state, action, pending, formKey, showSuccess, reset } = useEnquiryForm()
 
   if (showSuccess && state.status === 'success') {
-    return <Success state={state} whatsappHref={whatsappHref} onReset={reset} />
+    return <Success state={state} whatsappHref={whatsappHref} onReset={reset} form="contactForm" />
   }
   const values = state.status === 'error' ? (state.values ?? {}) : {}
   const errors = state.status === 'error' ? (state.errors ?? {}) : {}

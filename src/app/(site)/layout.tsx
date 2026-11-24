@@ -8,6 +8,7 @@ import '@fontsource-variable/sora'
 import '@fontsource-variable/inter'
 import '@/styles/globals.css'
 
+import { AnalyticsEvents } from '@/components/site/AnalyticsEvents'
 import { EnquiryDialog } from '@/components/site/EnquiryDialog'
 import { FloatingActions } from '@/components/site/FloatingActions'
 import { Footer } from '@/components/site/Footer'
@@ -86,7 +87,7 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
           Skip to content
         </a>
         <Header nav={buildHeaderNav(navigation)} contact={contact} />
-        <div id="main">{children}</div>
+        <main id="main">{children}</main>
         <Footer
           quickLinks={buildFooterLinks(navigation?.footerQuickLinks)}
           tours={buildFooterLinks(navigation?.footerTours)}
@@ -98,6 +99,7 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
         <JsonLd data={organisationLd(settings)} />
         {gaId && (
           <>
+            <AnalyticsEvents />
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
               strategy="afterInteractive"

@@ -4,7 +4,9 @@
  */
 import { z } from 'zod'
 
-import { BUDGETS, TRAVELLER_GROUPS, TRIP_TYPES } from '@/lib/catalog'
+import { BUDGETS, CONTACT_SUBJECTS, TRAVELLER_GROUPS, TRIP_TYPES } from '@/lib/catalog'
+
+export { CONTACT_SUBJECTS }
 import { normalizeIndianMobile } from '@/lib/format'
 
 const optionalText = (max: number) =>
@@ -22,13 +24,6 @@ const optionalEnum = <T extends readonly { value: string }[]>(list: T) =>
     .transform((v) =>
       v && list.some((o) => o.value === v) ? (v as T[number]['value']) : undefined,
     )
-
-export const CONTACT_SUBJECTS = [
-  { label: 'Tour enquiry', value: 'tour' },
-  { label: 'MICE / corporate', value: 'mice' },
-  { label: 'Existing booking', value: 'booking' },
-  { label: 'Other', value: 'other' },
-] as const
 
 export const enquirySchema = z.object({
   form: z.enum(['tripFinder', 'contactForm']),

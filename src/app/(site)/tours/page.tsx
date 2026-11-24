@@ -29,13 +29,13 @@ export default async function ToursPage({ searchParams }: Props) {
   }
 
   return (
-    <main>
+    <div>
       <PageHero
         crumbs={[{ label: 'Home', href: '/' }, { label: 'All tours' }]}
         title={params.q ? `Tours matching “${params.q}”` : 'All Tour Packages'}
         intro="Handpicked domestic, international and pilgrimage tours. Every package can be customised — we confirm on WhatsApp."
       />
       <ListingView params={params} basePath="/tours" category={null} />
-    </main>
+    </div>
   )
 }

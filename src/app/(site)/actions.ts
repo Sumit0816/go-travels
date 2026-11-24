@@ -7,6 +7,8 @@ import { payloadClient } from '@/lib/cms'
 import { contactSubjectDetails, parseEnquiry, type FieldErrors } from '@/lib/enquiry'
 import { createRateLimiter } from '@/lib/rate-limit'
 import { dispatchEnquiryAlert } from '@/lib/whatsapp/send'
+import { reportError } from '@/lib/monitoring'
+import { kickDueRetries } from '@/lib/whatsapp/kick'
 
 export type EnquiryState =
   | { status: 'idle' }
@@ -54,6 +56,7 @@ export async function submitEnquiry(
   const d = parsed.data
   try {
     const payload = await payloadClient()
+    kickDueRetries(payload)
     const pkg = d.packageSlug
       ? (
           await payload.find({
@@ -89,11 +92,11 @@ export async function submitEnquiry(
     // A failed WhatsApp send still leaves the enquiry saved; retries and the email fallback
     // take over, so the visitor sees success either way.
     await dispatchEnquiryAlert(payload, enquiry.id).catch((err) =>
-      payload.logger.error({ err }, `WhatsApp alert for enquiry ${enquiry.id} failed to start`),
+      reportError(err, 'whatsapp', { enquiryId: enquiry.id }),
     )
     return { status: 'success', enquiryId: enquiry.enquiryId ?? '', name: d.name }
   } catch (err) {
-    console.error('Enquiry could not be saved', err)
+    await reportError(err, 'enquiry-save')
     return {
       status: 'error',
       message:

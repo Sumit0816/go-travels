@@ -44,7 +44,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const hero = pickImage(category.heroImage, 'hero')
 
   return (
-    <main>
+    <div>
       <PageHero
         crumbs={[{ label: 'Home', href: '/' }, { label: category.name }]}
         title={title(category.name)}
@@ -77,6 +77,6 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         )}
       </PageHero>
       <ListingView params={listing} basePath={`/tours/${slug}`} category={category} />
-    </main>
+    </div>
   )
 }

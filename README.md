@@ -127,3 +127,10 @@ Bookings and enquiries are saved first, then sent to every recipient in **Settin
 - **Fallback email:** once every team alert for a booking or enquiry has failed, the message is emailed to the fallback address. Set the `SMTP_*` variables, or emails only go to the server log.
 - **Delivery receipts:** set the webhook URL shown on the "Test & delivery log" tab in the provider's dashboard, so statuses move on to Delivered and Read.
 - **Templates:** each approved Meta template takes its values in the order listed on the "Message templates" tab. For Gupshup, the template name is the template ID.
+
+## Deploying and running the site
+
+- **Deploy:** [docs/DEPLOY.md](docs/DEPLOY.md) covers Vercel, Neon, Cloudflare R2, the domain, the scheduled retries and backups, analytics and monitoring.
+- **Staff guide:** [docs/ADMIN_GUIDE.md](docs/ADMIN_GUIDE.md) explains how to use the CMS, by role.
+- **Security:** every response carries a Content-Security-Policy and the other headers in `src/lib/security-headers.ts`; HSTS turns on once `NEXT_PUBLIC_SITE_URL` is `https://`. Uploads are images only (no SVG). Admin sign-in locks for 15 minutes after 5 wrong passwords.
+- **Health check:** `GET /api/health` returns 200 when the database answers.

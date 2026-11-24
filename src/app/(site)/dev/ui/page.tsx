@@ -123,7 +123,7 @@ export default function ComponentLibraryPage() {
   if (process.env.NODE_ENV === 'production') notFound()
 
   return (
-    <main className="container-site py-10">
+    <div className="container-site py-10">
       <span className="eyebrow">Go Travels design system</span>
       <h1 className="heading-1 mt-2">Component library</h1>
       <p className="mt-2 max-w-[640px] text-ink-700">
@@ -382,6 +382,6 @@ export default function ComponentLibraryPage() {
           <SiteHeader currentPath="/" />
         </div>
       </Section>
-    </main>
+    </div>
   )
 }
