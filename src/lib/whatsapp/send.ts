@@ -1,19 +1,26 @@
 /**
- * Sends WhatsApp alerts and keeps the delivery log, booking and enquiry statuses in step.
+ * Team alerts for bookings and enquiries, on every enabled channel: WhatsApp (Settings ›
+ * WhatsApp Integration), Telegram and email (Settings › Team Alerts).
  *
  * Every message is a `messageLog` row: created "queued", sent straight away, and on a retryable
- * failure tried again by `processDueMessages` (a cron hits /api/whatsapp/process each minute)
- * after 1, 5 and 15 minutes. When every team alert for a booking or enquiry has failed, the
- * fallback email goes out once.
+ * failure tried again by `processDueMessages` (cron on /api/whatsapp/process, plus after bookings,
+ * enquiries and dashboard visits) after 1, 5 and 15 minutes. A booking's "Team alert" status is
+ * the best result across all its channels; when every alert has failed, the fallback email goes
+ * out once (unless email is already one of the channels).
  */
 import type { Payload } from 'payload'
 
+import { INCLUDE_SECRETS } from '@/fields/secret'
+
+import { sendTelegramMessage } from '@/lib/alerts/telegram'
 import { BUDGETS, TRAVELLER_GROUPS, TRIP_TYPES } from '@/lib/catalog'
 import { decryptSecret } from '@/lib/crypto'
 import { toWhatsAppNumber } from '@/lib/format'
-import type { Booking, Enquiry, MessageLog, WhatsappSetting } from '@/payload-types'
+import { reportError } from '@/lib/monitoring'
+import { siteUrl } from '@/lib/site/links'
+import type { Booking, Enquiry, MessageLog, TeamAlert, WhatsappSetting } from '@/payload-types'
 
-import { SendError, sendingAdapter, type ProviderConfig } from './adapters'
+import { SendError, sendingAdapter, type ProviderConfig, type WhatsAppAdapter } from './adapters'
 import {
   bookingVariables,
   customerVariables,
@@ -25,9 +32,9 @@ import {
   type Variables,
 } from './messages'
 import { combineStatuses, nextAttemptAt, type LogStatus, type ParentStatus } from './status'
-import { reportError } from '@/lib/monitoring'
 
 type Kind = MessageLog['kind']
+export type Channel = MessageLog['channel']
 
 const TEMPLATE_FOR: Record<Kind, keyof WhatsappSetting | null> = {
   booking: 'bookingTemplate',
@@ -37,27 +44,85 @@ const TEMPLATE_FOR: Record<Kind, keyof WhatsappSetting | null> = {
   test: 'bookingTemplate',
 }
 
+const decrypt = (payload: Payload, value: string | null | undefined, what: string) => {
+  if (!value) return ''
+  try {
+    return decryptSecret(value)
+  } catch (err) {
+    payload.logger.error({ err }, `${what} could not be decrypted (check WHATSAPP_ENC_KEY)`)
+    return ''
+  }
+}
+
 export async function loadWhatsAppSettings(payload: Payload) {
   const settings = await payload.findGlobal({
     slug: 'whatsappSettings',
     overrideAccess: true,
     depth: 0,
+    context: INCLUDE_SECRETS,
   })
-  let apiKey = ''
-  if (settings.apiKey) {
-    try {
-      apiKey = decryptSecret(settings.apiKey)
-    } catch (err) {
-      payload.logger.error(
-        { err },
-        'WhatsApp API key could not be decrypted (check WHATSAPP_ENC_KEY)',
-      )
-    }
-  }
+  const apiKey = decrypt(payload, settings.apiKey, 'WhatsApp API key')
   const sender = (settings.senderNumber ?? '').replace(/\D/g, '')
   const cfg: ProviderConfig | null =
     apiKey && sender ? { apiKey, sender, appName: settings.appName } : null
   return { settings, adapter: sendingAdapter(settings.provider, cfg) }
+}
+
+type AlertContext = {
+  wa: WhatsappSetting
+  waAdapter: WhatsAppAdapter
+  team: TeamAlert
+  telegramToken: string
+}
+
+export async function loadAlertSettings(payload: Payload): Promise<AlertContext> {
+  const [{ settings, adapter }, team] = await Promise.all([
+    loadWhatsAppSettings(payload),
+    payload.findGlobal({
+      slug: 'teamAlerts',
+      overrideAccess: true,
+      depth: 0,
+      context: INCLUDE_SECRETS,
+    }),
+  ])
+  return {
+    wa: settings,
+    waAdapter: adapter,
+    team,
+    telegramToken: decrypt(payload, team.telegramBotToken, 'Telegram bot token'),
+  }
+}
+
+type Destination = { channel: Channel; label: string; to: string }
+
+function whatsappRecipients(wa: WhatsappSetting): Destination[] {
+  const list = [...(wa.recipients ?? [])].sort(
+    (a, b) => Number(Boolean(b.isPrimary)) - Number(Boolean(a.isPrimary)),
+  )
+  return list.map((r) => ({ channel: 'whatsapp', label: r.label, to: r.phone }))
+}
+
+const telegramChats = (team: TeamAlert): Destination[] =>
+  (team.telegramChats ?? []).map((c) => ({ channel: 'telegram', label: c.label, to: c.chatId }))
+
+const emailRecipients = (team: TeamAlert): Destination[] =>
+  (team.emailRecipients ?? []).map((e) => ({
+    channel: 'email',
+    label: e.label || e.email,
+    to: e.email,
+  }))
+
+/** Everyone who should hear about a new booking or enquiry, on the channels switched on. */
+function teamDestinations(ctx: AlertContext): Destination[] {
+  const out: Destination[] = []
+  if (ctx.wa.enabled) {
+    const wa = whatsappRecipients(ctx.wa)
+    // WhatsApp on but no recipients: a row that fails, so the mistake shows in the log.
+    out.push(...(wa.length ? wa : [{ channel: 'whatsapp' as const, label: 'Team', to: '—' }]))
+  }
+  if (ctx.team.telegramEnabled) out.push(...telegramChats(ctx.team))
+  if (ctx.team.emailEnabled) out.push(...emailRecipients(ctx.team))
+  return out
 }
 
 const templateOf = (settings: WhatsappSetting, kind: Kind) => {
@@ -68,38 +133,77 @@ const templateOf = (settings: WhatsappSetting, kind: Kind) => {
   return { name: t?.name ?? '', language: t?.language || 'en' }
 }
 
-type NewMessage = {
+type NewMessage = Destination & {
   kind: Kind
   reference: string
-  recipientLabel: string
-  phone: string
   variables: Variables
   booking?: number
   enquiry?: number
+  /** "Open in CMS" link, added to Telegram and email alerts. */
+  link?: string
 }
 
-async function createMessage(payload: Payload, settings: WhatsappSetting, m: NewMessage) {
-  const template = templateOf(settings, m.kind)
+async function createMessage(payload: Payload, ctx: AlertContext, m: NewMessage) {
   const templateKind: TemplateKind = m.kind === 'test' ? 'booking' : (m.kind as TemplateKind)
+  const text = renderMessage(templateKind, m.variables)
+  const whatsapp = m.channel === 'whatsapp'
+  const template = whatsapp ? templateOf(ctx.wa, m.kind) : null
   return payload.create({
     collection: 'messageLog',
     data: {
       reference: m.reference,
       kind: m.kind,
+      channel: m.channel,
       booking: m.booking,
       enquiry: m.enquiry,
-      recipientLabel: m.recipientLabel,
-      phone: m.phone,
-      provider: settings.provider,
-      template: template.name || undefined,
-      language: template.language,
-      params: orderedParams(templateKind, m.variables),
-      body: renderMessage(templateKind, m.variables),
+      recipientLabel: m.label,
+      phone: m.to,
+      provider: whatsapp ? ctx.wa.provider : undefined,
+      template: template?.name || undefined,
+      language: template?.language,
+      params: whatsapp ? orderedParams(templateKind, m.variables) : undefined,
+      body: !whatsapp && m.link ? `${text}\n\nOpen in CMS: ${m.link}` : text,
       status: 'queued',
       attempts: 0,
       nextAttemptAt: new Date().toISOString(),
     },
     overrideAccess: true,
+  })
+}
+
+function emailSubject(log: Pick<MessageLog, 'kind' | 'reference'>) {
+  if (log.kind === 'booking') return `New booking request ${log.reference}`
+  if (log.kind === 'enquiry') return `New enquiry ${log.reference}`
+  return 'Go Travels test alert'
+}
+
+/** Sends one logged message on its channel. Throws SendError on failure. */
+async function deliver(payload: Payload, ctx: AlertContext, log: MessageLog) {
+  const channel = log.channel ?? 'whatsapp'
+  if (channel === 'telegram') {
+    return sendTelegramMessage(ctx.telegramToken, log.phone, log.body ?? '')
+  }
+  if (channel === 'email') {
+    try {
+      await payload.sendEmail({
+        to: log.phone,
+        subject: emailSubject(log),
+        text: (log.body ?? '').replace(/\*/g, ''),
+      })
+    } catch (err) {
+      throw new SendError(`Email could not be sent: ${(err as Error).message}`)
+    }
+    return { providerMessageId: undefined }
+  }
+  // WhatsApp: Indian mobiles in any format, or a full international number (11–15 digits).
+  const digits = log.phone.replace(/\D/g, '')
+  const to = toWhatsAppNumber(log.phone) ?? (/^\d{11,15}$/.test(digits) ? digits : null)
+  if (!to) throw new SendError(`"${log.phone}" is not a valid WhatsApp number`, false)
+  return ctx.waAdapter.send({
+    to,
+    template: { name: log.template ?? '', language: log.language || 'en' },
+    params: Array.isArray(log.params) ? (log.params as string[]) : [],
+    text: log.body ?? '',
   })
 }
 
@@ -110,30 +214,21 @@ async function createMessage(payload: Payload, settings: WhatsappSetting, m: New
 export async function sendMessage(
   payload: Payload,
   log: MessageLog,
-  opts: { retries?: boolean; now?: Date } = {},
+  opts: { retries?: boolean; now?: Date; ctx?: AlertContext } = {},
 ): Promise<LogStatus> {
   const now = opts.now ?? new Date()
-  const { settings, adapter } = await loadWhatsAppSettings(payload)
+  const ctx = opts.ctx ?? (await loadAlertSettings(payload))
   const attempts = (log.attempts ?? 0) + 1
-  // Indian mobiles in any format, or a full international number (11–15 digits).
-  const digits = log.phone.replace(/\D/g, '')
-  const to = toWhatsAppNumber(log.phone) ?? (/^\d{11,15}$/.test(digits) ? digits : null)
 
   let status: LogStatus
   let data: Partial<MessageLog>
   try {
-    if (!to) throw new SendError(`"${log.phone}" is not a valid WhatsApp number`, false)
-    const res = await adapter.send({
-      to,
-      template: { name: log.template ?? '', language: log.language || 'en' },
-      params: Array.isArray(log.params) ? (log.params as string[]) : [],
-      text: log.body ?? '',
-    })
+    const res = await deliver(payload, ctx, log)
     status = 'sent'
     data = {
       status,
       attempts,
-      providerMessageId: res.providerMessageId,
+      providerMessageId: res.providerMessageId ?? null,
       error: null,
       nextAttemptAt: null,
     }
@@ -147,29 +242,27 @@ export async function sendMessage(
       error: (err as Error).message.slice(0, 500),
       nextAttemptAt: next ? next.toISOString() : null,
     }
-    payload.logger.warn(`WhatsApp ${log.reference} to ${log.recipientLabel}: ${data.error}`)
+    payload.logger.warn(
+      `${log.channel ?? 'whatsapp'} alert ${log.reference} to ${log.recipientLabel}: ${data.error}`,
+    )
   }
 
-  await payload.update({
-    collection: 'messageLog',
-    id: log.id,
-    data,
-    overrideAccess: true,
-  })
-  if (log.kind === 'booking' || log.kind === 'enquiry') {
-    await refreshParent(payload, log, settings)
-  }
+  await payload.update({ collection: 'messageLog', id: log.id, data, overrideAccess: true })
+  if (log.kind === 'booking' || log.kind === 'enquiry') await refreshParent(payload, log, ctx)
   return status
 }
 
 const relId = (v: unknown) =>
   typeof v === 'object' && v ? (v as { id: number }).id : (v as number | null | undefined)
 
-/** Recomputes the booking's / enquiry's WhatsApp status; sends the fallback email on first failure. */
+/**
+ * Recomputes the booking's / enquiry's "Team alert" status from its latest round of alerts on
+ * all channels; sends the fallback email the first time they have all failed.
+ */
 export async function refreshParent(
   payload: Payload,
   log: Pick<MessageLog, 'kind' | 'booking' | 'enquiry' | 'reference'>,
-  settings?: WhatsappSetting,
+  ctx?: AlertContext,
 ): Promise<ParentStatus | null> {
   const collection =
     log.kind === 'booking' ? 'bookings' : log.kind === 'enquiry' ? 'enquiries' : null
@@ -205,15 +298,14 @@ export async function refreshParent(
     context: { disableRevalidate: true },
   })
   if (status === 'failed') {
-    await reportError(new Error(`Every WhatsApp alert for ${log.reference} failed`), 'whatsapp', {
-      errors: latestRound.map((l) => l.error),
+    await reportError(new Error(`Every team alert for ${log.reference} failed`), 'alerts', {
+      errors: latestRound.map((l) => `${l.channel}: ${l.error}`),
     })
-    await sendFallbackEmail(
-      payload,
-      settings ?? (await loadWhatsAppSettings(payload)).settings,
-      log.reference,
-      latestRound,
-    )
+    const settings = ctx ?? (await loadAlertSettings(payload))
+    // When email is one of the channels, it has already been tried.
+    if (!settings.team.emailEnabled) {
+      await sendFallbackEmail(payload, settings.wa, log.reference, latestRound)
+    }
   }
   return status
 }
@@ -232,16 +324,16 @@ async function sendFallbackEmail(
   try {
     await payload.sendEmail({
       to: settings.fallbackEmail,
-      subject: `WhatsApp alert failed: ${reference}`,
+      subject: `Team alert failed: ${reference}`,
       text: [
-        `The WhatsApp alert for ${reference} could not be delivered, so here it is by email.`,
+        `The team alert for ${reference} could not be delivered, so here it is by email.`,
         '',
         (first?.body ?? '').replace(/\*/g, ''),
         '',
         'Delivery errors:',
         ...errors,
         '',
-        'Open the CMS to follow up and use "Resend" once WhatsApp is working.',
+        'Open the CMS to follow up and use "Resend" once alerts are working.',
       ].join('\n'),
     })
   } catch (err) {
@@ -249,15 +341,14 @@ async function sendFallbackEmail(
   }
 }
 
-function recipientsOf(settings: WhatsappSetting) {
-  const list = settings.recipients ?? []
-  return [...list].sort((a, b) => Number(Boolean(b.isPrimary)) - Number(Boolean(a.isPrimary)))
-}
-
-/** Sends a batch, then reports whether at least one team alert went out. */
-async function sendAll(payload: Payload, logs: MessageLog[]) {
-  const results = await Promise.all(logs.map((l) => sendMessage(payload, l)))
-  return logs.some((l, i) => l.kind !== 'customerCopy' && results[i] === 'sent')
+/** Sends a batch; returns the channels on which at least one team alert went out. */
+async function sendAll(payload: Payload, ctx: AlertContext, logs: MessageLog[]) {
+  const results = await Promise.all(logs.map((l) => sendMessage(payload, l, { ctx })))
+  const channels = new Set<Channel>()
+  logs.forEach((l, i) => {
+    if (l.kind !== 'customerCopy' && results[i] === 'sent') channels.add(l.channel)
+  })
+  return [...channels]
 }
 
 export function bookingMessageInput(b: Booking): BookingMessageInput {
@@ -279,11 +370,46 @@ export function bookingMessageInput(b: Booking): BookingMessageInput {
   }
 }
 
-export type DispatchResult = { sent: boolean; text: string }
+export type DispatchResult = {
+  /** At least one team alert went out, or no channel is switched on (nothing to fail). */
+  sent: boolean
+  text: string
+  /** Channels that delivered a team alert. */
+  channels: Channel[]
+}
+
+const cmsLink = (collection: string, id: number) =>
+  `${siteUrl()}/admin/collections/${collection}/${id}`
+
+async function dispatch(
+  payload: Payload,
+  ctx: AlertContext,
+  parent: { collection: 'bookings' | 'enquiries'; id: number },
+  messages: NewMessage[],
+  text: string,
+): Promise<DispatchResult> {
+  if (!messages.some((m) => m.kind !== 'customerCopy')) {
+    payload.logger.warn(
+      `No team alert channel is switched on (${messages[0]?.reference ?? parent.id}): turn one on in Settings › Team Alerts or WhatsApp Integration.`,
+    )
+    return { sent: true, text, channels: [] }
+  }
+  const logs: MessageLog[] = []
+  for (const m of messages) logs.push(await createMessage(payload, ctx, m))
+  await payload.update({
+    collection: parent.collection,
+    id: parent.id,
+    data: { whatsappStatus: 'queued' },
+    overrideAccess: true,
+    context: { disableRevalidate: true },
+  })
+  const channels = await sendAll(payload, ctx, logs)
+  return { sent: channels.length > 0, text, channels }
+}
 
 /**
- * Sends the team alert for a booking to every recipient (plus the customer copy when switched
- * on). Used for new bookings and "Resend".
+ * Announces a booking on every enabled channel (plus the customer's WhatsApp copy when that is
+ * switched on). Used for new bookings and "Resend".
  */
 export async function dispatchBookingAlert(
   payload: Payload,
@@ -296,48 +422,40 @@ export async function dispatchBookingAlert(
     depth: 0,
     overrideAccess: true,
   })
-  const { settings } = await loadWhatsAppSettings(payload)
+  const ctx = await loadAlertSettings(payload)
   const input = bookingMessageInput(booking)
   const vars = bookingVariables(input)
-  const reference = input.requestId
-  const recipients = recipientsOf(settings)
-
-  const logs: MessageLog[] = []
-  for (const r of recipients.length ? recipients : [{ label: 'Team', phone: '—' }]) {
-    logs.push(
-      await createMessage(payload, settings, {
-        kind: 'booking',
-        reference,
-        recipientLabel: r.label,
-        phone: r.phone,
-        variables: vars,
-        booking: booking.id,
-      }),
-    )
+  const base = {
+    reference: input.requestId,
+    booking: booking.id,
+    link: cmsLink('bookings', booking.id),
   }
-  if ((opts.customerCopy ?? true) && settings.sendCustomerCopy) {
-    logs.push(
-      await createMessage(payload, settings, {
-        kind: 'customerCopy',
-        reference,
-        recipientLabel: 'Customer',
-        phone: booking.whatsapp,
-        variables: customerVariables(input),
-        booking: booking.id,
-      }),
-    )
+  const messages: NewMessage[] = teamDestinations(ctx).map((d) => ({
+    ...d,
+    ...base,
+    kind: 'booking',
+    variables: vars,
+  }))
+  if (ctx.wa.enabled && ctx.wa.sendCustomerCopy && (opts.customerCopy ?? true)) {
+    messages.push({
+      ...base,
+      channel: 'whatsapp',
+      label: 'Customer',
+      to: booking.whatsapp,
+      kind: 'customerCopy',
+      variables: customerVariables(input),
+    })
   }
-  await payload.update({
-    collection: 'bookings',
-    id: booking.id,
-    data: { whatsappStatus: 'queued' },
-    overrideAccess: true,
-    context: { disableRevalidate: true },
-  })
-  return { sent: await sendAll(payload, logs), text: renderMessage('booking', vars) }
+  return dispatch(
+    payload,
+    ctx,
+    { collection: 'bookings', id: booking.id },
+    messages,
+    renderMessage('booking', vars),
+  )
 }
 
-/** Sends the team alert for an enquiry to every recipient. */
+/** Announces an enquiry on every enabled channel. */
 export async function dispatchEnquiryAlert(
   payload: Payload,
   enquiryId: number,
@@ -348,7 +466,7 @@ export async function dispatchEnquiryAlert(
     depth: 1,
     overrideAccess: true,
   })
-  const { settings } = await loadWhatsAppSettings(payload)
+  const ctx = await loadAlertSettings(payload)
   const pkg = typeof enquiry.package === 'object' ? enquiry.package : null
   const vars = enquiryVariables(
     {
@@ -365,31 +483,24 @@ export async function dispatchEnquiryAlert(
     },
     { tripTypes: TRIP_TYPES, travellers: TRAVELLER_GROUPS, budgets: BUDGETS },
   )
-  const recipients = recipientsOf(settings)
-  const logs: MessageLog[] = []
-  for (const r of recipients.length ? recipients : [{ label: 'Team', phone: '—' }]) {
-    logs.push(
-      await createMessage(payload, settings, {
-        kind: 'enquiry',
-        reference: vars.enquiry_id!,
-        recipientLabel: r.label,
-        phone: r.phone,
-        variables: vars,
-        enquiry: enquiry.id,
-      }),
-    )
-  }
-  await payload.update({
-    collection: 'enquiries',
-    id: enquiry.id,
-    data: { whatsappStatus: 'queued' },
-    overrideAccess: true,
-    context: { disableRevalidate: true },
-  })
-  return { sent: await sendAll(payload, logs), text: renderMessage('enquiry', vars) }
+  const messages: NewMessage[] = teamDestinations(ctx).map((d) => ({
+    ...d,
+    kind: 'enquiry',
+    reference: vars.enquiry_id!,
+    enquiry: enquiry.id,
+    link: cmsLink('enquiries', enquiry.id),
+    variables: vars,
+  }))
+  return dispatch(
+    payload,
+    ctx,
+    { collection: 'enquiries', id: enquiry.id },
+    messages,
+    renderMessage('enquiry', vars),
+  )
 }
 
-/** Sample booking used by "Send test message", so the template itself is tested. */
+/** Sample booking used by the test buttons, so the real message layout is tested. */
 export const SAMPLE_BOOKING: BookingMessageInput = {
   requestId: 'TEST',
   packageTitle: 'Goa Beach Escape',
@@ -406,36 +517,79 @@ export const SAMPLE_BOOKING: BookingMessageInput = {
   specialRequests: 'This is a test message from the CMS',
 }
 
-/** "Send test message": the booking template with sample values, to the primary recipient. */
-export async function sendTestMessage(
+export type TestResult = { ok: boolean; to?: string; error?: string }
+
+/** Sends the sample booking to the given destinations, once each (no retries). */
+async function sendTest(
   payload: Payload,
-): Promise<{ ok: boolean; error?: string; to?: string }> {
-  const { settings } = await loadWhatsAppSettings(payload)
-  const primary = recipientsOf(settings)[0]
-  if (!primary) return { ok: false, error: 'Add at least one recipient first.' }
-  const log = await createMessage(payload, settings, {
-    kind: 'test',
-    reference: 'TEST',
-    recipientLabel: primary.label,
-    phone: primary.phone,
-    variables: bookingVariables(SAMPLE_BOOKING),
-  })
-  const status = await sendMessage(payload, log, { retries: false })
-  const ok = status === 'sent'
-  const after = await payload.findByID({
-    collection: 'messageLog',
-    id: log.id,
-    depth: 0,
-    overrideAccess: true,
-  })
-  await payload.updateGlobal({
-    slug: 'whatsappSettings',
-    data: { connectionStatus: ok ? 'connected' : 'error' },
-    overrideAccess: true,
-  })
-  return ok
-    ? { ok, to: primary.label }
-    : { ok, error: after.error ?? 'Sending failed', to: primary.label }
+  ctx: AlertContext,
+  destinations: Destination[],
+): Promise<TestResult> {
+  if (!destinations.length) return { ok: false, error: 'Add at least one recipient first.' }
+  const results: { label: string; ok: boolean; error?: string | null }[] = []
+  for (const d of destinations) {
+    const log = await createMessage(payload, ctx, {
+      ...d,
+      kind: 'test',
+      reference: 'TEST',
+      variables: bookingVariables(SAMPLE_BOOKING),
+    })
+    const status = await sendMessage(payload, log, { retries: false, ctx })
+    const after =
+      status === 'sent'
+        ? null
+        : await payload.findByID({
+            collection: 'messageLog',
+            id: log.id,
+            depth: 0,
+            overrideAccess: true,
+          })
+    results.push({ label: d.label, ok: status === 'sent', error: after?.error })
+  }
+  const failed = results.find((r) => !r.ok)
+  const to = results.map((r) => r.label).join(', ')
+  return failed
+    ? { ok: false, to, error: `${failed.label}: ${failed.error ?? 'Sending failed'}` }
+    : { ok: true, to }
+}
+
+/** "Send test message" (WhatsApp): the booking template with sample values, to the primary recipient. */
+export async function sendTestMessage(payload: Payload): Promise<TestResult> {
+  const ctx = await loadAlertSettings(payload)
+  const primary = whatsappRecipients(ctx.wa)[0]
+  const result = await sendTest(payload, ctx, primary ? [primary] : [])
+  if (primary) {
+    await payload.updateGlobal({
+      slug: 'whatsappSettings',
+      data: { connectionStatus: result.ok ? 'connected' : 'error' },
+      overrideAccess: true,
+    })
+  }
+  return result
+}
+
+/** "Send test to Telegram" / "Send test email": to every chat / recipient of that channel. */
+export async function sendTestAlert(
+  payload: Payload,
+  channel: 'telegram' | 'email',
+): Promise<TestResult> {
+  const ctx = await loadAlertSettings(payload)
+  if (channel === 'telegram' && !ctx.telegramToken) {
+    return { ok: false, error: 'Save the bot token first.' }
+  }
+  const result = await sendTest(
+    payload,
+    ctx,
+    channel === 'telegram' ? telegramChats(ctx.team) : emailRecipients(ctx.team),
+  )
+  if (channel === 'telegram') {
+    await payload.updateGlobal({
+      slug: 'teamAlerts',
+      data: { telegramStatus: result.ok ? 'connected' : 'error' },
+      overrideAccess: true,
+    })
+  }
+  return result
 }
 
 /** Retries that are due. Called by the cron endpoint; safe to call often. */
@@ -454,6 +608,8 @@ export async function processDueMessages(
     depth: 0,
     overrideAccess: true,
   })
+  if (!docs.length) return { processed: 0 }
+  const ctx = await loadAlertSettings(payload)
   let processed = 0
   for (const log of docs) {
     // Claim the row so an overlapping run skips it.
@@ -465,7 +621,7 @@ export async function processDueMessages(
       overrideAccess: true,
     })
     if (!claimed.docs.length) continue
-    await sendMessage(payload, { ...log, nextAttemptAt: lease }, { now })
+    await sendMessage(payload, { ...log, nextAttemptAt: lease }, { now, ctx })
     processed++
   }
   return { processed }

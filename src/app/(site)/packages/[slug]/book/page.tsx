@@ -5,7 +5,7 @@ import { Suspense } from 'react'
 import { BookingFlow, type BookingPackage } from '@/components/site/booking/BookingFlow'
 import { buildContact } from '@/components/site/data'
 import { MAX_ADULTS, MAX_CHILDREN } from '@/lib/booking'
-import { getPackageBySlug, getSiteSettings } from '@/lib/cms'
+import { getPackageBySlug, getSiteSettings, payloadClient } from '@/lib/cms'
 import { formatDuration } from '@/lib/format'
 import { firstImage } from '@/lib/site/media'
 import type { Destination } from '@/payload-types'
@@ -34,9 +34,20 @@ const int = (v: string | undefined, min: number, max: number) => {
 export default async function BookPage({ params, searchParams }: Props) {
   const { slug } = await params
   const sp = await searchParams
-  const [pkg, settings] = await Promise.all([
+  const [pkg, settings, wa] = await Promise.all([
     getPackageBySlug(slug),
     getSiteSettings().catch(() => null),
+    // Only the two switches; the rest of the WhatsApp settings stays private.
+    payloadClient()
+      .then((p) =>
+        p.findGlobal({
+          slug: 'whatsappSettings',
+          overrideAccess: true,
+          depth: 0,
+          select: { enabled: true, sendCustomerCopy: true },
+        }),
+      )
+      .catch(() => null),
   ])
   if (!pkg || !pkg.hotelOptions?.length) notFound()
 
@@ -78,6 +89,10 @@ export default async function BookPage({ params, searchParams }: Props) {
             whatsappHref: contact.whatsappHref,
             phone: contact.phone,
             phoneHref: contact.phoneHref,
+          }}
+          alerts={{
+            whatsapp: Boolean(wa?.enabled),
+            customerCopy: Boolean(wa?.enabled && wa?.sendCustomerCopy),
           }}
         />
       </Suspense>

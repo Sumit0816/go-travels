@@ -85,3 +85,14 @@ describe('error report scrubbing', () => {
     expect(e.request).toEqual({ url: '/x' })
   })
 })
+
+describe('spam trap', () => {
+  it('only counts a non-empty trap field', async () => {
+    const { SPAM_TRAP_FIELD, isSpamTrapFilled } = await import('@/lib/spam-trap')
+    expect(isSpamTrapFilled({ [SPAM_TRAP_FIELD]: 'http://spam.example' })).toBe(true)
+    expect(isSpamTrapFilled({ [SPAM_TRAP_FIELD]: '  ' })).toBe(false)
+    // The old autofillable name is ignored.
+    expect(isSpamTrapFilled({ website: 'https://gotravels.in' })).toBe(false)
+    expect(SPAM_TRAP_FIELD).not.toMatch(/web|url|site|email|phone|name/i)
+  })
+})

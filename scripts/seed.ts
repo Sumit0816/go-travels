@@ -1389,6 +1389,7 @@ async function main() {
       data: {
         reference: booking.requestId!,
         kind: 'booking',
+        channel: 'whatsapp',
         booking: booking.id,
         recipientLabel: 'Owner',
         phone: '+91 98765 43210',
@@ -1624,6 +1625,8 @@ async function main() {
   await payload.updateGlobal({
     slug: 'whatsappSettings',
     data: {
+      // Off until the WhatsApp account and templates are approved; Team Alerts (email) is on.
+      enabled: false,
       provider: 'gupshup',
       senderNumber: '+91 98765 43210',
       recipients: [
@@ -1643,7 +1646,20 @@ async function main() {
     // No API key: development sends to the console instead of a real provider.
     context: { ...ctx, resetWhatsAppKey: true },
   })
-  payload.logger.info('Globals: site settings, homepage, menus, WhatsApp settings')
+  await payload.updateGlobal({
+    slug: 'teamAlerts',
+    data: {
+      telegramEnabled: false,
+      telegramTokenHint: null,
+      telegramChats: [],
+      telegramStatus: 'notConnected',
+      emailEnabled: true,
+      emailRecipients: [{ label: 'Bookings desk', email: 'hello@gotravels.in' }],
+    },
+    // No Telegram token in demo data.
+    context: { ...ctx, resetWhatsAppKey: true },
+  })
+  payload.logger.info('Globals: site settings, homepage, menus, WhatsApp settings, team alerts')
 
   // The website caches CMS data (Next.js data cache). Everything was recreated with new IDs, so
   // drop the cache here; a running `npm run dev` also keeps a copy in memory until restarted.

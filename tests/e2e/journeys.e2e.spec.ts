@@ -62,9 +62,13 @@ test.describe('Keyboard only', () => {
 
     // Step 3: review, then send.
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Review your request')
-    await tabTo(page, (el) => el.textContent?.trim() === 'Send Booking via WhatsApp')
+    await tabTo(page, (el) =>
+      /^Send Booking (via WhatsApp|Request)$/.test(el.textContent?.trim() ?? ''),
+    )
     await page.keyboard.press('Enter')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Booking request sent!')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Booking request sent!', {
+      timeout: 20_000,
+    })
     await expect(page.getByRole('heading', { level: 1 })).toBeFocused()
   })
 

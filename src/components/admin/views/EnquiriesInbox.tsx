@@ -221,7 +221,7 @@ export async function EnquiriesInbox({ payload, user: viewer, searchParams }: Li
                 <dd>{label(BUDGETS, selected.budget)}</dd>
               </div>
               <div>
-                <dt>WhatsApp alert</dt>
+                <dt>Team alert</dt>
                 <dd>
                   <Badge status={selected.whatsappStatus ?? 'notSent'}>
                     {WHATSAPP_LABELS[selected.whatsappStatus ?? 'notSent']}

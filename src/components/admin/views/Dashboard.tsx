@@ -61,7 +61,8 @@ async function bookingKpis(payload: Payload, user: User) {
   if (canRead('whatsapp', user.role)) {
     // Team alerts with a final outcome; queued or in-flight retries don't count against the rate.
     const recent = { createdAt: { greater_than_equal: since } }
-    const alerts = { kind: { in: ['booking', 'enquiry'] } }
+    // Delivered/Read receipts only exist for WhatsApp, so the rate covers WhatsApp alerts only.
+    const alerts = { kind: { in: ['booking', 'enquiry'] }, channel: { equals: 'whatsapp' } }
     const [total, delivered, read] = await Promise.all([
       count(payload, user, 'messageLog', {
         and: [recent, alerts, { status: { in: ['delivered', 'read', 'failed'] } }],
@@ -158,7 +159,7 @@ export async function Dashboard({ initPageResult, searchParams }: AdminViewServe
           <h1>{showBookings ? 'Bookings' : 'Dashboard'}</h1>
           <p>
             {showBookings
-              ? 'Every request from the website, and its WhatsApp delivery status.'
+              ? 'Every request from the website, and whether the team alert went out.'
               : `Welcome back, ${user?.name ?? 'there'}. Here's what needs attention in the content.`}
           </p>
         </div>
@@ -231,7 +232,7 @@ export async function Dashboard({ initPageResult, searchParams }: AdminViewServe
                     <th scope="col">Travel date</th>
                     <th scope="col">Pax</th>
                     <th scope="col">Est. total</th>
-                    <th scope="col">WhatsApp</th>
+                    <th scope="col">Team alert</th>
                     <th scope="col">Status</th>
                     <th scope="col">
                       <span style={{ position: 'absolute', left: -9999 }}>Actions</span>

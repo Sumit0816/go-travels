@@ -24,6 +24,7 @@ import { Users } from './collections/Users'
 import { Homepage } from './globals/Homepage'
 import { Navigation } from './globals/Navigation'
 import { SiteSettings } from './globals/SiteSettings'
+import { TeamAlerts } from './globals/TeamAlerts'
 import { WhatsAppSettings } from './globals/WhatsAppSettings'
 import { migrations } from './migrations'
 import { health } from './endpoints/health'
@@ -74,7 +75,7 @@ export default buildConfig({
     MessageLog,
     Counters,
   ],
-  globals: [Homepage, Navigation, WhatsAppSettings, SiteSettings],
+  globals: [Homepage, Navigation, WhatsAppSettings, TeamAlerts, SiteSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

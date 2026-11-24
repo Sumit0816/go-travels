@@ -42,6 +42,7 @@ const KIND_LABEL: Record<string, string> = {
 export async function WhatsAppTools({ payload }: { payload: Payload }) {
   const { docs } = await payload.find({
     collection: 'messageLog',
+    where: { channel: { equals: 'whatsapp' } },
     sort: '-createdAt',
     limit: 10,
     depth: 0,

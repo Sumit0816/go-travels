@@ -17,7 +17,7 @@ What you see depends on your role:
 
 - Change a booking's **status** straight from the table: New → Contacted → Confirmed (or Cancelled). "Confirmed this month" counts from the day it was marked Confirmed.
 - Open a booking to see the trip, the traveller's details and the estimated total, and to add **internal notes**. The customer never sees notes.
-- **WhatsApp** column: _Sent_ means our team received it; _Delivered_ and _Read_ follow when the provider confirms. _Failed_ means every team number failed after the retries. The details were also emailed to the fallback address. Use **Resend** once WhatsApp is working again.
+- **Team alert** column: _Sent_ means the alert reached the team on at least one channel (Telegram, email or WhatsApp); _Delivered_ and _Read_ follow when WhatsApp confirms. _Failed_ means every channel failed after the retries, and the details were emailed to the fallback address. Use **Resend** once alerts are working again.
 - **Export CSV** downloads the bookings in the current filter, for Excel.
 
 Prices on the website are estimates. Always confirm the final price, dates and payment details with the customer on WhatsApp. **No payment is taken on the website.**
@@ -63,13 +63,17 @@ New reviews arrive as **Pending**. Read them on the Testimonials board, then **A
 ## Settings (Owner)
 
 - **Site Settings:** phone numbers, WhatsApp number, email, address, hours, map, social links, default SEO text and share image, Google Analytics ID and Search Console code.
+- **Team Alerts:** where new bookings and enquiries are announced.
+  - **Telegram** (free): create a bot with @BotFather, paste its token, add the bot to your team group and send a message there, then on the **Test** tab use **Find my group**. Copy the chat ID into the Telegram tab, switch it on, save, and use **Send test to Telegram**.
+  - **Email** (free): add recipients, switch it on, and use **Send test email**.
 - **WhatsApp Integration:**
+  - **Send alerts on WhatsApp** stays off until the WhatsApp account and templates are approved
   - provider, API key (stored encrypted; leave the box empty to keep the saved key), sender number, recipients (mark one _Primary_), customer copy, fallback email and template names
   - on the **Test & delivery log** tab, **Send test message** checks everything, and the log shows every message with any error
 - **Users:** invite staff with the right role. Suspend people who leave rather than deleting them, so their notes keep their name.
 
 ## If something goes wrong
 
-- **A customer says they booked but you have nothing on WhatsApp:** check the dashboard. Every request is saved even when WhatsApp fails. Look at the WhatsApp column, then Settings › WhatsApp delivery log for the error.
+- **A customer says they booked but no alert arrived:** check the dashboard. Every request is saved even when alerts fail. Look at the **Team alert** column, then **Settings › Alert delivery log** for the error.
 - **A change doesn't show on the website:** check the item is _Published_, then refresh after a few seconds.
 - **Anything else:** note the time, the page and what you did, and send it to the developer.

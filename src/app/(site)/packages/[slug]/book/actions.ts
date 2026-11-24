@@ -7,6 +7,7 @@ import { clientIpFrom, formRateLimit } from '@/lib/client-ip'
 import { payloadClient } from '@/lib/cms'
 import { formatDuration, normalizeIndianMobile } from '@/lib/format'
 import { createRateLimiter } from '@/lib/rate-limit'
+import { isSpamTrapFilled } from '@/lib/spam-trap'
 import { bookingVariables, renderBookingMessage } from '@/lib/whatsapp/messages'
 import { bookingMessageInput, dispatchBookingAlert } from '@/lib/whatsapp/send'
 import { reportError } from '@/lib/monitoring'
@@ -15,7 +16,7 @@ import { kickDueRetries } from '@/lib/whatsapp/kick'
 export type BookingResult =
   | { status: 'error'; message: string; errors?: BookingErrors }
   /** Saved and delivered to at least one team number. `message` is what the team received. */
-  | { status: 'sent'; requestId: string; message: string }
+  | { status: 'sent'; requestId: string; message: string; channels: string[] }
   /** Saved, but WhatsApp failed for now (retries and the email fallback continue). */
   | { status: 'failed'; requestId: string }
 
@@ -30,9 +31,10 @@ const clientIp = async () => clientIpFrom(await headers())
  * browser's estimate is ignored), saves the booking and sends the WhatsApp alert straight away.
  */
 export async function submitBooking(raw: Record<string, unknown>): Promise<BookingResult> {
-  // Spam trap: pretend success, save nothing.
-  if (typeof raw.website === 'string' && raw.website) {
-    return { status: 'sent', requestId: 'GT-00000', message: '' }
+  // Spam trap: pretend success, save nothing (logged, so a false positive can't go unnoticed).
+  if (isSpamTrapFilled(raw)) {
+    console.warn('Booking ignored: spam trap field was filled')
+    return { status: 'sent', requestId: 'GT-00000', message: '', channels: [] }
   }
   const parsed = parseBooking(raw)
   if (!parsed.ok) {
@@ -107,8 +109,10 @@ export async function submitBooking(raw: Record<string, unknown>): Promise<Booki
     })
     const requestId = booking.requestId ?? `booking-${booking.id}`
     try {
-      const { sent, text } = await dispatchBookingAlert(payload, booking.id)
-      return sent ? { status: 'sent', requestId, message: text } : { status: 'failed', requestId }
+      const { sent, text, channels } = await dispatchBookingAlert(payload, booking.id)
+      return sent
+        ? { status: 'sent', requestId, message: text, channels }
+        : { status: 'failed', requestId }
     } catch (err) {
       await reportError(err, 'whatsapp', { requestId })
       return { status: 'failed', requestId }
@@ -152,8 +156,12 @@ export async function retryBookingAlert(
   if (booking.whatsappStatus !== 'failed' && booking.whatsappStatus !== 'queued') {
     // Already went through (e.g. a background retry succeeded).
     const message = renderBookingMessage(bookingVariables(bookingMessageInput(booking)))
-    return { status: 'sent', requestId, message }
+    return { status: 'sent', requestId, message, channels: [] }
   }
-  const { sent, text } = await dispatchBookingAlert(payload, booking.id, { customerCopy: false })
-  return sent ? { status: 'sent', requestId, message: text } : { status: 'failed', requestId }
+  const { sent, text, channels } = await dispatchBookingAlert(payload, booking.id, {
+    customerCopy: false,
+  })
+  return sent
+    ? { status: 'sent', requestId, message: text, channels }
+    : { status: 'failed', requestId }
 }

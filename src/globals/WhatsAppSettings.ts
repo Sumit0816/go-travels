@@ -2,6 +2,7 @@ import type { GlobalConfig } from 'payload'
 
 import { canRead, canWrite } from '@/access'
 import { WHATSAPP_PROVIDERS } from '@/lib/catalog'
+import { secretField, stripSecrets } from '@/fields/secret'
 import { encryptSecret, isEncryptedSecret } from '@/lib/crypto'
 import {
   BOOKING_TEMPLATE_VARIABLES,
@@ -46,6 +47,7 @@ export const WhatsAppSettings: GlobalConfig = {
     update: ({ req }) => canWrite('whatsapp', req.user?.role),
   },
   hooks: {
+    afterRead: [stripSecrets('apiKey')],
     beforeChange: [
       ({ data }) => {
         const raw = data.apiKey
@@ -65,34 +67,27 @@ export const WhatsAppSettings: GlobalConfig = {
           label: '1 · Provider',
           fields: [
             {
+              name: 'enabled',
+              label: 'Send alerts on WhatsApp',
+              type: 'checkbox',
+              defaultValue: false,
+              admin: {
+                description:
+                  'Switch on once the provider account and templates are approved. Until then, use Team Alerts (Telegram or email).',
+              },
+            },
+            {
               name: 'provider',
               type: 'select',
               required: true,
               defaultValue: 'gupshup',
               options: [...WHATSAPP_PROVIDERS],
             },
-            {
-              name: 'apiKey',
-              label: 'API key / token',
-              type: 'text',
-              access: { read: () => false },
-              admin: {
-                description:
-                  'Stored encrypted on the server and never sent to the browser. Leave empty to keep the current key.',
-              },
-              hooks: {
-                // Empty submit keeps the saved key (the form never receives it back).
-                // The seed passes `resetWhatsAppKey` so demo data never calls a real provider.
-                beforeChange: [
-                  ({ value, previousValue, context }) =>
-                    context?.resetWhatsAppKey
-                      ? null
-                      : typeof value === 'string' && value.trim() !== ''
-                        ? value
-                        : previousValue,
-                ],
-              },
-            },
+            secretField(
+              'apiKey',
+              'API key / token',
+              'Stored encrypted on the server and never sent to the browser. Leave empty to keep the current key.',
+            ),
             {
               name: 'apiKeyHint',
               label: 'Saved key',

@@ -3,6 +3,7 @@ import * as migration_20261105_082652_booking_confirmed_at from './20261105_0826
 import * as migration_20261105_103715_destination_page_content from './20261105_103715_destination_page_content';
 import * as migration_20261105_120005_page_blocks_buttons_variant from './20261105_120005_page_blocks_buttons_variant';
 import * as migration_20261105_142553_whatsapp_delivery from './20261105_142553_whatsapp_delivery';
+import * as migration_20261124_152624_team_alerts from './20261124_152624_team_alerts';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20261105_142553_whatsapp_delivery.up,
     down: migration_20261105_142553_whatsapp_delivery.down,
-    name: '20261105_142553_whatsapp_delivery'
+    name: '20261105_142553_whatsapp_delivery',
+  },
+  {
+    up: migration_20261124_152624_team_alerts.up,
+    down: migration_20261124_152624_team_alerts.down,
+    name: '20261124_152624_team_alerts'
   },
 ];

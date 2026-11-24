@@ -9,6 +9,8 @@ import { track } from '@/lib/analytics'
 import { SelectField, TextAreaField, TextField } from '@/components/ui/TextField'
 import { BUDGETS, CONTACT_SUBJECTS, TRAVELLER_GROUPS, TRIP_TYPES } from '@/lib/catalog'
 
+import { SpamTrap } from './SpamTrap'
+
 const initial: EnquiryState = { status: 'idle' }
 
 /** Action state plus "send another": a dismissed success shows a fresh, empty form. */
@@ -27,18 +29,6 @@ function useEnquiryForm() {
       setFormKey((k) => k + 1)
     },
   }
-}
-
-/** Hidden spam trap: bots fill every field; people never see this one. */
-function Honeypot() {
-  return (
-    <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
-      <label>
-        Website
-        <input type="text" name="website" tabIndex={-1} autoComplete="off" />
-      </label>
-    </div>
-  )
 }
 
 function Success({
@@ -121,7 +111,7 @@ export function TripFinderForm({
       {defaults?.packageSlug && (
         <input type="hidden" name="packageSlug" value={defaults.packageSlug} />
       )}
-      <Honeypot />
+      <SpamTrap />
 
       <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
         <legend className="mb-2 text-label">Trip type</legend>
@@ -224,7 +214,7 @@ export function ContactForm({ whatsappHref }: { whatsappHref: string | null }) {
   return (
     <form key={formKey} action={action} className="relative flex flex-col gap-4" noValidate>
       <input type="hidden" name="form" value="contactForm" />
-      <Honeypot />
+      <SpamTrap />
       <div className="grid gap-3.5 sm:grid-cols-2">
         <TextField
           label="Full name"

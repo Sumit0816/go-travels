@@ -82,9 +82,10 @@ If Neon moves to a newer Postgres version, set the repository _variable_ `BACKUP
 - **Uptime:** point a free monitor (UptimeRobot, Better Stack) at `https://gotravels.in/api/health`.
 - **Sentry:** with `SENTRY_DSN` set, server errors are reported with phone numbers and emails masked. A booking whose WhatsApp alerts all failed is reported too.
 
-## 8. WhatsApp
+## 8. Team alerts
 
-Follow the Gupshup steps from the plan: approved templates, then **Admin › Settings › WhatsApp Integration**. Set the provider's delivery webhook to the URL shown on the "Test & delivery log" tab, then use **Send test message**.
+- **Now (free):** in **Admin › Settings › Team Alerts**, set up Telegram (bot token, group, "Find my group", test) and/or email recipients, and switch them on. Email needs the `SMTP_*` variables from step 3. The bot token is encrypted with `WHATSAPP_ENC_KEY`, so keep that key safe.
+- **Later (WhatsApp):** after the Gupshup account and templates are approved, fill in **Settings › WhatsApp Integration**. Set the provider's delivery webhook to the URL on the "Test & delivery log" tab, use **Send test message**, then switch on **Send alerts on WhatsApp**. Telegram and email can stay on alongside it.
 
 ## Before launch
 

@@ -2,7 +2,13 @@ import type { Endpoint } from 'payload'
 
 import { canWrite } from '@/access'
 import { webhookAdapter } from '@/lib/whatsapp/adapters'
-import { processDueMessages, sendTestMessage } from '@/lib/whatsapp/send'
+import { findTelegramChats } from '@/lib/alerts/telegram'
+import {
+  loadAlertSettings,
+  processDueMessages,
+  sendTestAlert,
+  sendTestMessage,
+} from '@/lib/whatsapp/send'
 import { applyStatusUpdates, webhookTokenMatches } from '@/lib/whatsapp/webhook'
 
 const role = (u: unknown) => (u as { role?: unknown } | null)?.role
@@ -71,9 +77,48 @@ export const whatsappTest: Endpoint = {
   },
 }
 
+const canManageAlerts = (user: unknown) => Boolean(user) && canWrite('whatsapp', role(user))
+
+/** POST /api/alerts/test {channel: 'telegram' | 'email'} : the Team Alerts test buttons. */
+export const alertTest: Endpoint = {
+  path: '/alerts/test',
+  method: 'post',
+  handler: async (req) => {
+    if (!canManageAlerts(req.user)) return Response.json({ error: 'Not allowed' }, { status: 403 })
+    const body = ((await req.json?.().catch(() => null)) ?? {}) as { channel?: string }
+    if (body.channel !== 'telegram' && body.channel !== 'email') {
+      return Response.json({ error: 'Unknown channel' }, { status: 400 })
+    }
+    const result = await sendTestAlert(req.payload, body.channel)
+    return Response.json(result, { status: result.ok ? 200 : 502 })
+  },
+}
+
+/**
+ * POST /api/alerts/telegram/chats : groups that recently added or messaged the bot, so staff
+ * can copy the chat ID ("Find my group").
+ */
+export const telegramChats: Endpoint = {
+  path: '/alerts/telegram/chats',
+  method: 'post',
+  handler: async (req) => {
+    if (!canManageAlerts(req.user)) return Response.json({ error: 'Not allowed' }, { status: 403 })
+    const { telegramToken } = await loadAlertSettings(req.payload)
+    if (!telegramToken)
+      return Response.json({ error: 'Save the bot token first.' }, { status: 400 })
+    try {
+      return Response.json({ chats: await findTelegramChats(telegramToken) })
+    } catch (err) {
+      return Response.json({ error: (err as Error).message }, { status: 502 })
+    }
+  },
+}
+
 export const WHATSAPP_ENDPOINTS = [
   whatsappWebhook,
   whatsappProcess,
   whatsappProcessPost,
   whatsappTest,
+  alertTest,
+  telegramChats,
 ]
