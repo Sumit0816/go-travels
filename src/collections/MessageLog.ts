@@ -4,16 +4,16 @@ import { canRead } from '@/access'
 import { WHATSAPP_PROVIDERS } from '@/lib/catalog'
 
 /**
- * WhatsApp delivery log. Written only by the server (sending, retries and provider webhooks),
+ * Alert delivery log (WhatsApp, Telegram, email). Written only by the server (sending, retries and provider webhooks),
  * so no CMS user can create, edit or delete entries.
  */
 export const MessageLog: CollectionConfig = {
   slug: 'messageLog',
-  labels: { singular: 'WhatsApp message', plural: 'WhatsApp delivery log' },
+  labels: { singular: 'Alert', plural: 'Alert delivery log' },
   admin: {
     useAsTitle: 'reference',
     group: 'Settings',
-    defaultColumns: ['reference', 'recipientLabel', 'phone', 'status', 'attempts', 'createdAt'],
+    defaultColumns: ['reference', 'channel', 'recipientLabel', 'status', 'attempts', 'createdAt'],
     listSearchableFields: ['reference', 'phone', 'providerMessageId'],
   },
   access: {
@@ -42,6 +42,18 @@ export const MessageLog: CollectionConfig = {
         { label: 'Test message', value: 'test' },
       ],
     },
+    {
+      name: 'channel',
+      type: 'select',
+      required: true,
+      defaultValue: 'whatsapp',
+      index: true,
+      options: [
+        { label: 'WhatsApp', value: 'whatsapp' },
+        { label: 'Telegram', value: 'telegram' },
+        { label: 'Email', value: 'email' },
+      ],
+    },
     { name: 'booking', type: 'relationship', relationTo: 'bookings' },
     { name: 'enquiry', type: 'relationship', relationTo: 'enquiries' },
     {
@@ -49,7 +61,14 @@ export const MessageLog: CollectionConfig = {
       type: 'text',
       admin: { description: 'e.g. Owner, Sales desk, Customer' },
     },
-    { name: 'phone', type: 'text', required: true },
+    {
+      // Named "phone" for history; holds the WhatsApp number, Telegram chat ID or email address.
+      name: 'phone',
+      label: 'To',
+      type: 'text',
+      required: true,
+      admin: { description: 'WhatsApp number, Telegram chat ID or email address.' },
+    },
     { name: 'provider', type: 'select', options: [...WHATSAPP_PROVIDERS] },
     { name: 'providerMessageId', type: 'text', index: true },
     { name: 'template', type: 'text' },

@@ -246,7 +246,7 @@ export const Bookings: CollectionConfig = {
     ...workflowFields.filter((f) => 'name' in f && f.name !== 'internalNotes'),
     {
       name: 'whatsappStatus',
-      label: 'WhatsApp',
+      label: 'Team alert',
       type: 'select',
       defaultValue: 'notSent',
       options: [...WHATSAPP_STATUSES],

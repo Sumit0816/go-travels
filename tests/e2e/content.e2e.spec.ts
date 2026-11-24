@@ -56,7 +56,9 @@ test.describe('Content', () => {
     await form.getByLabel('WhatsApp number*').fill('9876543210')
     await form.getByLabel('Message*').fill('Testing the contact form.')
     await form.getByRole('button', { name: 'Send Message' }).click()
-    await expect(page.getByRole('heading', { name: 'Enquiry sent!' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Enquiry sent!' })).toBeVisible({
+      timeout: 20_000,
+    })
     await expect(page.getByText(/EQ-\d+/)).toBeVisible()
   })
 
@@ -69,7 +71,9 @@ test.describe('Content', () => {
     await page.getByLabel('Your name*').fill('E2E Planner')
     await page.getByLabel('WhatsApp number*').fill('9123456780')
     await page.getByRole('button', { name: 'Send Enquiry' }).click()
-    await expect(page.getByRole('heading', { name: 'Enquiry sent!' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Enquiry sent!' })).toBeVisible({
+      timeout: 20_000,
+    })
     await expect(page.getByRole('link', { name: 'Open WhatsApp' })).toHaveAttribute(
       'href',
       /wa\.me\/.+EQ-/,

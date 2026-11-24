@@ -374,3 +374,118 @@ export function SendTestMessage() {
     </div>
   )
 }
+
+/** "Send test to Telegram" / "Send test email" on Settings › Team Alerts › Test. */
+export function SendTestAlert({
+  channel,
+  label,
+}: {
+  channel: 'telegram' | 'email'
+  label: string
+}) {
+  const { pending, error, run, router } = useAction()
+  const [result, setResult] = useState<string | null>(null)
+  return (
+    <div className="gta-actions" style={{ alignItems: 'center' }}>
+      <button
+        type="button"
+        className="gta-btn gta-btn--primary"
+        disabled={pending}
+        onClick={() =>
+          run(
+            async () => {
+              setResult(null)
+              const res = await fetch('/api/alerts/test', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ channel }),
+              })
+              const body = (await res.json().catch(() => ({}))) as {
+                ok?: boolean
+                error?: string
+                to?: string
+              }
+              if (!body.ok) throw new Error(body.error ?? `Request failed (${res.status})`)
+              return body
+            },
+            (r) => {
+              setResult(`Sent to ${(r as { to?: string }).to}.`)
+              router.refresh()
+            },
+          )
+        }
+      >
+        {pending ? 'Sending…' : label}
+      </button>
+      <span role="status" aria-live="polite">
+        {result && <span className="gta-badge gta-badge--success">{result}</span>}
+        {error && <span className="gta-error">{error}</span>}
+      </span>
+    </div>
+  )
+}
+
+/** Lists groups that added the bot, with their chat IDs to copy into the Telegram tab. */
+export function TelegramChatFinder() {
+  const { pending, error, run } = useAction()
+  const [chats, setChats] = useState<{ id: string; title: string; type: string }[] | null>(null)
+  return (
+    <div style={{ display: 'grid', gap: 10 }}>
+      <div className="gta-actions">
+        <button
+          type="button"
+          className="gta-btn"
+          disabled={pending}
+          onClick={() =>
+            run(
+              async () => {
+                const res = await fetch('/api/alerts/telegram/chats', {
+                  method: 'POST',
+                  credentials: 'include',
+                })
+                const body = (await res.json().catch(() => ({}))) as {
+                  chats?: { id: string; title: string; type: string }[]
+                  error?: string
+                }
+                if (!res.ok) throw new Error(body.error ?? `Request failed (${res.status})`)
+                return body.chats ?? []
+              },
+              (r) => setChats(r as { id: string; title: string; type: string }[]),
+            )
+          }
+        >
+          {pending ? 'Looking…' : 'Find my group'}
+        </button>
+        {error && <span className="gta-error">{error}</span>}
+      </div>
+      {chats && !chats.length && (
+        <p className="gta-empty" style={{ margin: 0 }}>
+          No groups yet. Add the bot to your group, send any message in the group, then try again.
+        </p>
+      )}
+      {chats && chats.length > 0 && (
+        <table className="gta-table">
+          <thead>
+            <tr>
+              <th scope="col">Group or chat</th>
+              <th scope="col">Chat ID (copy into the Telegram tab)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {chats.map((c) => (
+              <tr key={c.id}>
+                <td>
+                  {c.title} <span style={{ opacity: 0.7 }}>({c.type})</span>
+                </td>
+                <td>
+                  <code>{c.id}</code>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}

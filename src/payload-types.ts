@@ -117,12 +117,14 @@ export interface Config {
     homepage: Homepage;
     navigation: Navigation;
     whatsappSettings: WhatsappSetting;
+    teamAlerts: TeamAlert;
     siteSettings: SiteSetting;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
     whatsappSettings: WhatsappSettingsSelect<false> | WhatsappSettingsSelect<true>;
+    teamAlerts: TeamAlertsSelect<false> | TeamAlertsSelect<true>;
     siteSettings: SiteSettingsSelect<false> | SiteSettingsSelect<true>;
   };
   locale: null;
@@ -944,12 +946,16 @@ export interface MessageLog {
    */
   reference: string;
   kind: 'booking' | 'enquiry' | 'customerCopy' | 'reviewLink' | 'test';
+  channel: 'whatsapp' | 'telegram' | 'email';
   booking?: (number | null) | Booking;
   enquiry?: (number | null) | Enquiry;
   /**
    * e.g. Owner, Sales desk, Customer
    */
   recipientLabel?: string | null;
+  /**
+   * WhatsApp number, Telegram chat ID or email address.
+   */
   phone: string;
   provider?: ('gupshup' | 'interakt' | 'wati' | 'aisensy' | 'msg91' | 'twilio') | null;
   providerMessageId?: string | null;
@@ -1676,6 +1682,7 @@ export interface UsersSelect<T extends boolean = true> {
 export interface MessageLogSelect<T extends boolean = true> {
   reference?: T;
   kind?: T;
+  channel?: T;
   booking?: T;
   enquiry?: T;
   recipientLabel?: T;
@@ -1875,6 +1882,10 @@ export interface Navigation {
  */
 export interface WhatsappSetting {
   id: number;
+  /**
+   * Switch on once the provider account and templates are approved. Until then, use Team Alerts (Telegram or email).
+   */
+  enabled?: boolean | null;
   provider: 'gupshup' | 'interakt' | 'wati' | 'aisensy' | 'msg91' | 'twilio';
   /**
    * Stored encrypted on the server and never sent to the browser. Leave empty to keep the current key.
@@ -1938,6 +1949,48 @@ export interface WhatsappSetting {
     name?: string | null;
     language?: string | null;
   };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Where new bookings and enquiries are announced to the team, besides WhatsApp. Turn on as many as you like.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "teamAlerts".
+ */
+export interface TeamAlert {
+  id: number;
+  telegramEnabled?: boolean | null;
+  /**
+   * From @BotFather, e.g. 123456:ABC-… Stored encrypted and never shown again. Leave empty to keep the saved token.
+   */
+  telegramBotToken?: string | null;
+  /**
+   * Last 4 characters of the saved token.
+   */
+  telegramTokenHint?: string | null;
+  telegramChats?:
+    | {
+        /**
+         * e.g. Bookings group
+         */
+        label: string;
+        chatId: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Updated by "Send test to Telegram".
+   */
+  telegramStatus?: ('notConnected' | 'connected' | 'error') | null;
+  emailEnabled?: boolean | null;
+  emailRecipients?:
+    | {
+        label?: string | null;
+        email: string;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2096,6 +2149,7 @@ export interface NavigationSelect<T extends boolean = true> {
  * via the `definition` "whatsappSettings_select".
  */
 export interface WhatsappSettingsSelect<T extends boolean = true> {
+  enabled?: T;
   provider?: T;
   apiKey?: T;
   apiKeyHint?: T;
@@ -2136,6 +2190,34 @@ export interface WhatsappSettingsSelect<T extends boolean = true> {
     | {
         name?: T;
         language?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "teamAlerts_select".
+ */
+export interface TeamAlertsSelect<T extends boolean = true> {
+  telegramEnabled?: T;
+  telegramBotToken?: T;
+  telegramTokenHint?: T;
+  telegramChats?:
+    | T
+    | {
+        label?: T;
+        chatId?: T;
+        id?: T;
+      };
+  telegramStatus?: T;
+  emailEnabled?: T;
+  emailRecipients?:
+    | T
+    | {
+        label?: T;
+        email?: T;
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;

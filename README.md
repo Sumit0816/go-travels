@@ -118,9 +118,17 @@ CI checks that every migration applies cleanly to an empty database.
 
 The table lives in `src/access/roles.ts`, and `tests/unit/access.test.ts` checks every cell. The first account ever created becomes the Owner.
 
-## WhatsApp alerts
+## Team alerts (Telegram, email, WhatsApp)
 
-Bookings and enquiries are saved first, then sent to every recipient in **Settings › WhatsApp Integration** (plus a copy to the customer, if that's switched on). Gupshup and Interakt are supported; the code is in `src/lib/whatsapp/`.
+Bookings and enquiries are saved first, then announced to the team on every channel that's switched on:
+
+- **Telegram** (free): a bot posts each booking to your team group. Set it up in **Settings › Team Alerts**; the Test tab has "Find my group" and a test button.
+- **Email** (free): to the recipients on the Email tab, through the server's SMTP settings.
+- **WhatsApp** (paid, via Gupshup or Interakt): switch on "Send alerts on WhatsApp" in **Settings › WhatsApp Integration** once the account and templates are approved. This also sends the customer their copy.
+
+A booking's **Team alert** status is the best result across its channels, and the customer sees "Booking request sent!" as soon as one channel delivers. The engine is in `src/lib/whatsapp/send.ts`, and the Telegram sender in `src/lib/alerts/telegram.ts`.
+
+The points below apply to all channels unless they name WhatsApp.
 
 - **Without an API key**, development and CI print each message to the server log instead of sending it. In production, a missing key counts as a failed send.
 - **Retries:** a failed send is tried again after 1, 5 and 15 minutes. Something must call `GET /api/whatsapp/process` every minute with `Authorization: Bearer $CRON_SECRET`: `vercel.json` sets this up on Vercel (per-minute crons need a paid plan); on a VPS, use a crontab line (see `.env.example`).

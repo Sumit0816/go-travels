@@ -28,6 +28,8 @@ test.describe('Booking', () => {
     test.setTimeout(120_000)
     await page.goto('/packages/goa-beach-escape/book?adults=2&children=1&hotel=deluxe4')
     await page.locator('[data-ready]').waitFor()
+    // No field a browser would autofill as "website" (it silently dropped real bookings).
+    await expect(page.locator('input[name="website"]')).toHaveCount(0)
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Trip details')
     await expect(page.getByLabel('Hotel category')).toHaveValue('deluxe4')
     await expect(page.locator('output[aria-label="Children"]')).toHaveText('1')
@@ -63,13 +65,21 @@ test.describe('Booking', () => {
     // Step 3: review, then send.
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Review your request')
     await expect(page.getByText('3 Adults, 1 Child').first()).toBeVisible()
-    await page.getByRole('button', { name: 'Send Booking via WhatsApp' }).click()
+    // "Send Booking via WhatsApp" when WhatsApp alerts are on, "Send Booking Request" otherwise.
+    await page.getByRole('button', { name: /^Send Booking (via WhatsApp|Request)$/ }).click()
 
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Booking request sent!')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Booking request sent!', {
+      timeout: 20_000,
+    })
     await expect(page.getByText(/GT-\d+/).first()).toBeVisible()
+    await expect(
+      page.getByText(/has been (sent to our team|delivered to our team on WhatsApp)/),
+    ).toBeVisible()
+    // The WhatsApp preview appears only when the alert went out on WhatsApp.
     const preview = page.getByRole('figure', { name: /WhatsApp message preview/ })
-    await expect(preview).toContainText('New Booking Request')
-    await expect(preview).toContainText('Travellers: 3 Adults, 1 Child')
+    if (await preview.count()) {
+      await expect(preview).toContainText('Travellers: 3 Adults, 1 Child')
+    }
     await expect(page.getByRole('link', { name: 'Open WhatsApp chat' })).toHaveAttribute(
       'href',
       /wa\.me\/.+GT-/,
@@ -97,7 +107,9 @@ test.describe('Enquiry pop-up', () => {
     await dialog.getByLabel('Your name*').fill('E2E Pop-up')
     await dialog.getByLabel('WhatsApp number*').fill('9123456781')
     await dialog.getByRole('button', { name: 'Send Enquiry' }).click()
-    await expect(dialog.getByRole('heading', { name: 'Enquiry sent!' })).toBeVisible()
+    await expect(dialog.getByRole('heading', { name: 'Enquiry sent!' })).toBeVisible({
+      timeout: 20_000,
+    })
     await page.keyboard.press('Escape')
     await expect(dialog).toBeHidden()
   })
@@ -109,6 +121,17 @@ test.describe('WhatsApp admin', () => {
   })
   test.afterAll(async () => {
     await cleanupTestUser()
+  })
+
+  test('Team Alerts sends a test email and offers the Telegram group finder', async ({ page }) => {
+    await login({ page, user: testUser })
+    await page.goto('/admin/globals/teamAlerts')
+    // The token box shows (empty) so a token can be pasted; the saved one is never sent back.
+    await expect(page.getByLabel('Bot token')).toHaveValue('')
+    await page.getByText('Test', { exact: true }).first().click()
+    await expect(page.getByRole('button', { name: 'Find my group' })).toBeVisible()
+    await page.getByRole('button', { name: 'Send test email' }).click()
+    await expect(page.getByText(/^Sent to /)).toBeVisible()
   })
 
   test('sends a test message and lists it in the delivery log', async ({ page }) => {

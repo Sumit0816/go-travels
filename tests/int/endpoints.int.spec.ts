@@ -6,7 +6,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { createLocalReq, getPayload, type Endpoint, type Payload } from 'payload'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import config from '@/payload.config'
 import { exportBookingsCsv, resendBookingAlert } from '@/endpoints/bookings'
@@ -147,34 +147,68 @@ describe('bookings export and resend', () => {
     expect((await call(exportBookingsCsv, 'contentEditor')).status).toBe(403)
   })
 
-  it('re-sends a failed WhatsApp alert and logs it', async () => {
-    const b = await payload.create({
-      collection: 'bookings',
+  it('re-sends a failed team alert and logs it', async () => {
+    // A known channel for this test: email to one recipient, with sending captured.
+    const team = await payload.findGlobal({ slug: 'teamAlerts', overrideAccess: true })
+    const wa = await payload.findGlobal({ slug: 'whatsappSettings', overrideAccess: true })
+    await payload.updateGlobal({
+      slug: 'whatsappSettings',
+      data: { enabled: false },
+      overrideAccess: true,
+    })
+    await payload.updateGlobal({
+      slug: 'teamAlerts',
       data: {
-        name: 'Resend',
-        whatsapp: '9830122457',
-        travelDate: new Date().toISOString(),
-        adults: 2,
-        status: 'new',
-        whatsappStatus: 'failed',
+        telegramEnabled: false,
+        emailEnabled: true,
+        emailRecipients: [{ label: 'Desk', email: `desk-${tag}@example.test` }],
       },
+      overrideAccess: true,
     })
-    cleanup.push({ collection: 'bookings', id: b.id })
-    users.sales.name = `Sales ${tag}`
+    const email = vi.spyOn(payload, 'sendEmail').mockResolvedValue(undefined)
+    try {
+      const b = await payload.create({
+        collection: 'bookings',
+        data: {
+          name: 'Resend',
+          whatsapp: '9830122457',
+          travelDate: new Date().toISOString(),
+          adults: 2,
+          status: 'new',
+          whatsappStatus: 'failed',
+        },
+      })
+      cleanup.push({ collection: 'bookings', id: b.id })
+      users.sales.name = `Sales ${tag}`
 
-    const res = await call(resendBookingAlert, 'sales', { id: String(b.id) })
-    expect(res.status).toBe(200)
-    const after = await payload.findByID({ collection: 'bookings', id: b.id })
-    // Sent straight away; the outcome depends on this database's WhatsApp settings.
-    expect(['sent', 'queued', 'failed']).toContain(after.whatsappStatus)
-    expect((await res.json()).whatsappStatus).toBe(after.whatsappStatus)
-    const logs = await payload.find({
-      collection: 'messageLog',
-      where: { booking: { equals: b.id } },
-    })
-    expect(logs.docs.length).toBeGreaterThan(0)
-    expect(logs.docs.every((l) => l.kind === 'booking')).toBe(true)
-    expect(logs.docs[0].attempts).toBe(1)
+      const res = await call(resendBookingAlert, 'sales', { id: String(b.id) })
+      expect(res.status).toBe(200)
+      expect(await res.json()).toMatchObject({ ok: true, whatsappStatus: 'sent' })
+      const logs = await payload.find({
+        collection: 'messageLog',
+        where: { booking: { equals: b.id } },
+      })
+      expect(logs.docs.map((l) => [l.channel, l.kind, l.attempts])).toEqual([
+        ['email', 'booking', 1],
+      ])
+      expect(email).toHaveBeenCalledTimes(1)
+    } finally {
+      email.mockRestore()
+      await payload.updateGlobal({
+        slug: 'whatsappSettings',
+        data: { enabled: wa.enabled },
+        overrideAccess: true,
+      })
+      await payload.updateGlobal({
+        slug: 'teamAlerts',
+        data: {
+          telegramEnabled: team.telegramEnabled,
+          emailEnabled: team.emailEnabled,
+          emailRecipients: team.emailRecipients,
+        },
+        overrideAccess: true,
+      })
+    }
   })
 
   it('stamps confirmedAt when a booking becomes Confirmed', async () => {

@@ -26,8 +26,11 @@ import {
 } from '@/lib/booking'
 import { track } from '@/lib/analytics'
 import { hotelCategoryLabel } from '@/lib/catalog'
+import { SPAM_TRAP_FIELD } from '@/lib/spam-trap'
 import { formatINR, formatIndianMobile, formatTravellers } from '@/lib/format'
 import { formatTripDate } from '@/lib/whatsapp/messages'
+
+import { SpamTrap } from '../SpamTrap'
 
 export type BookingPackage = {
   slug: string
@@ -87,15 +90,23 @@ function save(slug: string, v: Values | null) {
 
 const stepOfField = (f: BookingField): 1 | 2 => (STEP_FIELDS[1].includes(f) ? 1 : 2)
 
+export type BookingAlerts = { whatsapp: boolean; customerCopy: boolean }
+
+/** Last step's name when alerts don't go out on WhatsApp. */
+const STEPS_WITHOUT_WHATSAPP = ['Trip details', 'Traveller details', 'Review', 'Request sent']
+
 /** Booking request form (design: "Desktop · Booking", States · "WhatsApp send failed"). */
 export function BookingFlow({
   pkg,
   initial,
   contact,
+  alerts,
 }: {
   pkg: BookingPackage
   initial: Partial<Values>
   contact: BookingContact
+  /** Whether team alerts (and the customer copy) go out on WhatsApp, for the wording. */
+  alerts: BookingAlerts
 }) {
   const params = useSearchParams()
   const urlStep = Math.min(4, Math.max(1, Number(params.get('step')) || 1)) as Step
@@ -193,7 +204,10 @@ export function BookingFlow({
       return
     }
     startTransition(async () => {
-      const r = await submitBooking({ ...withSlug, website: honeypotRef.current?.value ?? '' })
+      const r = await submitBooking({
+        ...withSlug,
+        [SPAM_TRAP_FIELD]: honeypotRef.current?.value ?? '',
+      })
       if (r.status === 'error') {
         setFormError(r.message)
         const first = Object.keys(r.errors ?? {})[0] as BookingField | undefined
@@ -236,7 +250,7 @@ export function BookingFlow({
         <Icon name="check" size={16} />
         Secure booking request · No online payment
       </p>
-      <BookingStepper current={step} />
+      <BookingStepper current={step} steps={alerts.whatsapp ? undefined : STEPS_WITHOUT_WHATSAPP} />
 
       <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 rounded-xl border border-line-200 bg-surface p-5 md:p-8">
@@ -246,6 +260,7 @@ export function BookingFlow({
               requestId={done.requestId}
               phone={values.whatsapp}
               message={done.message}
+              channels={done.channels}
               contact={contact}
             />
           )}
@@ -269,18 +284,7 @@ export function BookingFlow({
                 next()
               }}
             >
-              <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
-                <label>
-                  Website
-                  <input
-                    ref={honeypotRef}
-                    type="text"
-                    name="website"
-                    tabIndex={-1}
-                    autoComplete="off"
-                  />
-                </label>
-              </div>
+              <SpamTrap inputRef={honeypotRef} />
 
               {step === 1 && (
                 <>
@@ -471,7 +475,8 @@ export function BookingFlow({
               {step === 3 && (
                 <>
                   <StepHeading headingRef={headingRef} title="Review your request">
-                    Check everything before we send it to our team on WhatsApp.
+                    Check everything before we send it to our team
+                    {alerts.whatsapp ? ' on WhatsApp' : ''}.
                   </StepHeading>
                   <dl className="m-0 grid gap-x-6 gap-y-4 sm:grid-cols-2">
                     <Review
@@ -509,10 +514,12 @@ export function BookingFlow({
                   <div className="flex gap-3 rounded-lg bg-ocean-50 p-4 text-body-sm text-ink-700">
                     <Icon name="whatsapp" size={20} />
                     <p className="m-0">
-                      <b className="text-ink-900">How confirmation works.</b> Your request is sent
-                      instantly to Go Travels on WhatsApp, and you&apos;ll get a copy too. Our
-                      expert confirms availability and shares payment details — nothing is charged
-                      on this website.
+                      <b className="text-ink-900">How confirmation works.</b>{' '}
+                      {alerts.whatsapp
+                        ? `Your request is sent instantly to Go Travels on WhatsApp${alerts.customerCopy ? ", and you'll get a copy too" : ''}.`
+                        : 'Your request reaches our team instantly.'}{' '}
+                      Our expert confirms availability on WhatsApp and shares payment details —
+                      nothing is charged on this website.
                     </p>
                   </div>
                 </>
@@ -550,9 +557,11 @@ export function BookingFlow({
                 >
                   {step === 3 && <Icon name="whatsapp" size={18} />}
                   {pending
-                    ? 'Sending to WhatsApp…'
+                    ? 'Sending…'
                     : step === 3
-                      ? 'Send Booking via WhatsApp'
+                      ? alerts.whatsapp
+                        ? 'Send Booking via WhatsApp'
+                        : 'Send Booking Request'
                       : 'Continue'}
                   {step < 3 && <Icon name="chevronRight" size={18} />}
                 </button>
@@ -710,14 +719,17 @@ function Sent({
   requestId,
   phone,
   message,
+  channels,
   contact,
 }: {
   headingRef: React.RefObject<HTMLHeadingElement | null>
   requestId: string
   phone: string
   message: string
+  channels: string[]
   contact: BookingContact
 }) {
+  const onWhatsApp = channels.includes('whatsapp')
   const chat = waWith(
     contact.whatsappHref,
     `Hi Go Travels, I just sent booking request ${requestId}.`,
@@ -741,10 +753,11 @@ function Sent({
         Booking request sent!
       </h1>
       <p className="m-0 text-body-lg text-ink-700">
-        Request ID <b className="text-ink-900">{requestId}</b> has been delivered to our team on
-        WhatsApp. An expert will reply on {formatIndianMobile(phone)} shortly.
+        Request ID <b className="text-ink-900">{requestId}</b> has been{' '}
+        {onWhatsApp ? 'delivered to our team on WhatsApp' : 'sent to our team'}. An expert will
+        reply on WhatsApp at {formatIndianMobile(phone)} shortly.
       </p>
-      {message && (
+      {message && onWhatsApp && (
         <div className="flex w-full max-w-[460px] flex-col gap-2">
           <span className="text-caption font-semibold text-ink-500 uppercase">
             Message received on Go Travels WhatsApp
@@ -813,7 +826,7 @@ function Failed({
           onClick={onRetry}
           disabled={pending}
         >
-          {pending ? 'Sending to WhatsApp…' : 'Try again'}
+          {pending ? 'Sending…' : 'Try again'}
         </button>
         {chat && (
           <a href={chat} target="_blank" rel="noreferrer" className="gt-btn gt-btn--wa-outline">

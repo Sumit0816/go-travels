@@ -6,6 +6,7 @@ import { clientIpFrom, formRateLimit } from '@/lib/client-ip'
 import { payloadClient } from '@/lib/cms'
 import { contactSubjectDetails, parseEnquiry, type FieldErrors } from '@/lib/enquiry'
 import { createRateLimiter } from '@/lib/rate-limit'
+import { isSpamTrapFilled } from '@/lib/spam-trap'
 import { dispatchEnquiryAlert } from '@/lib/whatsapp/send'
 import { reportError } from '@/lib/monitoring'
 import { kickDueRetries } from '@/lib/whatsapp/kick'
@@ -30,8 +31,12 @@ export async function submitEnquiry(
     [...formData.entries()].map(([k, v]) => [k, typeof v === 'string' ? v : '']),
   ) as Record<string, string>
 
-  // Spam trap: real visitors never see or fill this field. Pretend success, save nothing.
-  if (raw.website) return { status: 'success', enquiryId: '', name: raw.name ?? '' }
+  // Spam trap: real visitors never see or fill this field. Pretend success, save nothing
+  // (logged, so a false positive can't go unnoticed).
+  if (isSpamTrapFilled(raw)) {
+    console.warn('Enquiry ignored: spam trap field was filled')
+    return { status: 'success', enquiryId: '', name: raw.name ?? '' }
+  }
 
   const parsed = parseEnquiry(raw)
   if (!parsed.ok) {

@@ -16,10 +16,11 @@ import {
   sendTestMessage,
 } from '@/lib/whatsapp/send'
 import { applyStatusUpdates } from '@/lib/whatsapp/webhook'
-import type { WhatsappSetting } from '@/payload-types'
+import type { TeamAlert, WhatsappSetting } from '@/payload-types'
 
 let payload: Payload
 let original: WhatsappSetting
+let originalTeam: TeamAlert
 const created: { collection: 'bookings' | 'enquiries'; id: number }[] = []
 
 const MIN = 60_000
@@ -76,8 +77,16 @@ async function call(endpoint: Endpoint, url: string, init: { body?: unknown; aut
 beforeAll(async () => {
   payload = await getPayload({ config: await config })
   original = await payload.findGlobal({ slug: 'whatsappSettings', overrideAccess: true })
+  originalTeam = await payload.findGlobal({ slug: 'teamAlerts', overrideAccess: true })
+  // WhatsApp only, so these tests see just its alerts (Telegram and email: alerts.int.spec.ts).
+  await payload.updateGlobal({
+    slug: 'teamAlerts',
+    data: { telegramEnabled: false, emailEnabled: false },
+    overrideAccess: true,
+  })
   await setSettings(
     {
+      enabled: true,
       provider: 'gupshup',
       senderNumber: '',
       recipients: [
@@ -112,6 +121,7 @@ afterAll(async () => {
   })
   await setSettings(
     {
+      enabled: original.enabled,
       provider: original.provider,
       senderNumber: original.senderNumber,
       recipients: original.recipients,
@@ -122,6 +132,14 @@ afterAll(async () => {
     },
     true,
   )
+  await payload.updateGlobal({
+    slug: 'teamAlerts',
+    data: {
+      telegramEnabled: originalTeam.telegramEnabled,
+      emailEnabled: originalTeam.emailEnabled,
+    },
+    overrideAccess: true,
+  })
 })
 
 describe('sending', () => {
@@ -204,7 +222,7 @@ describe('retries and fallback', () => {
       expect(email).toHaveBeenCalledTimes(1)
       expect(email.mock.calls[0]![0]).toMatchObject({
         to: 'ops@example.test',
-        subject: `WhatsApp alert failed: ${b.requestId}`,
+        subject: `Team alert failed: ${b.requestId}`,
       })
       expect(String((email.mock.calls[0]![0] as { text: string }).text)).toContain(
         `New Booking Request · ${b.requestId}`,

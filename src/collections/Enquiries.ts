@@ -181,7 +181,7 @@ export const Enquiries: CollectionConfig = {
     },
     {
       name: 'whatsappStatus',
-      label: 'WhatsApp alert',
+      label: 'Team alert',
       type: 'select',
       defaultValue: 'notSent',
       options: [...WHATSAPP_STATUSES],
