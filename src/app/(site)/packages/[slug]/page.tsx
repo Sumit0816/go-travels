@@ -85,9 +85,15 @@ export default async function PackagePage({ params }: Props) {
       ? [{ src: card.src, full: full.src, alt: card.alt, position: card.position }]
       : []
   })
-  // The first photo is shown large, so use the bigger rendition for it.
+  // The first photo is shown large: phones get the 800px rendition, wider screens 1920px.
   const hero = pickImage(pkg.gallery?.[0], 'hero')
-  if (images[0] && hero) images[0] = { ...images[0], src: hero.src }
+  if (images[0] && hero && hero.src !== images[0].src) {
+    images[0] = {
+      ...images[0],
+      srcSet: `${images[0].src} 800w, ${hero.src} 1920w`,
+      sizes: '(max-width: 767px) 100vw, 60vw',
+    }
+  }
 
   const badge =
     pkg.badge && pkg.badge !== 'none'
@@ -163,7 +169,7 @@ export default async function PackagePage({ params }: Props) {
       whatsappHref={askHref ?? contact.whatsappHref}
     >
       <JsonLd data={tripLd} />
-      <main className="gt-package">
+      <div className="gt-package">
         <div className="container-site flex flex-col gap-4 pt-6">
           <Breadcrumbs
             items={[
@@ -384,7 +390,7 @@ export default async function PackagePage({ params }: Props) {
             Ask us to customise this trip →
           </Link>
         </p>
-      </main>
+      </div>
       {cheapest && <MobileBookingBar />}
     </BookingProvider>
   )

@@ -1,4 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "crons": [{ "path": "/api/whatsapp/process", "schedule": "* * * * *" }]
+  "regions": ["bom1"],
+  "crons": [{ "path": "/api/whatsapp/process", "schedule": "30 3 * * *" }]
 }

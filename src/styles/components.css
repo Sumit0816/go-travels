@@ -697,6 +697,14 @@
     background: var(--color-night-900) url(/brand/illustrations/hero.svg) center / cover no-repeat;
     color: var(--color-surface);
     display: grid;
+    /* Reserve the height the slide has once the web fonts load, so the search box below
+       doesn't jump when they swap in (Lighthouse CLS). */
+    min-height: 520px;
+  }
+  @media (min-width: 768px) {
+    .gt-hero {
+      min-height: 576px;
+    }
   }
   .gt-hero__slide {
     grid-area: 1 / 1;

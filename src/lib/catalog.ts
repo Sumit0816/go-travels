@@ -72,6 +72,13 @@ export const BUDGETS = [
   { label: '₹1L+', value: '1l-plus' },
 ] as const
 
+export const CONTACT_SUBJECTS = [
+  { label: 'Tour enquiry', value: 'tour' },
+  { label: 'MICE / corporate', value: 'mice' },
+  { label: 'Existing booking', value: 'booking' },
+  { label: 'Other', value: 'other' },
+] as const
+
 export const BOOKING_STATUSES = [
   { label: 'New', value: 'new' },
   { label: 'Contacted', value: 'contacted' },

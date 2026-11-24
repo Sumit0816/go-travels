@@ -275,7 +275,7 @@ Each milestone = one branch + one PR, reviewed before the next starts. Estimates
 
 **Done when:** a booking from a real phone lands on the owner's WhatsApp within seconds, shows Delivered → Read in the dashboard, and a forced failure shows the fallback screen and sends the email.
 
-### Phase 6 — Hardening & launch (≈4 days)
+### Phase 6 — Hardening & launch (≈4 days) · Code done; deploy and content are on the business side (see `docs/DEPLOY.md`)
 
 1. Playwright e2e: browse → package → book → success (desktop + mobile), enquiry modal, admin login + status change, role restrictions.
 2. Accessibility pass with axe; keyboard-only run of the booking flow.
@@ -309,7 +309,7 @@ Each milestone = one branch + one PR, reviewed before the next starts. Estimates
 - [ ] All packages, destinations, categories, slides and pages entered with real photos and alt text
 - [ ] Site Settings complete (address, phones, hours, map, social, SEO defaults)
 - [ ] Users invited with correct roles; Owner set as primary WhatsApp recipient
-- [ ] Lighthouse mobile ≥ 90; axe has no serious violations
+- [ ] Lighthouse mobile ≥ 90; axe has no serious violations (local production build: Home 91–93, Package 92–97, Blog 98, Contact 99, Booking 95; accessibility 100. Re-check on the live domain.)
 - [ ] Sitemap submitted; GA4 receiving events (booking_request, enquiry_submit, whatsapp_click)
 - [ ] Database backups and error monitoring on
 

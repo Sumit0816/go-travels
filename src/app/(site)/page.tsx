@@ -118,13 +118,13 @@ export default async function HomePage() {
   const hasHero = order.includes('slider')
 
   return (
-    <main>
+    <div>
       {!hasHero && (
         <h1 className="sr-only">
           {settings.siteName} — {settings.tagline}
         </h1>
       )}
       {order.map((key) => sections[key] ?? null)}
-    </main>
+    </div>
   )
 }

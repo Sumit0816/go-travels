@@ -24,6 +24,7 @@ import {
   type BookingErrors,
   type BookingField,
 } from '@/lib/booking'
+import { track } from '@/lib/analytics'
 import { hotelCategoryLabel } from '@/lib/catalog'
 import { formatINR, formatIndianMobile, formatTravellers } from '@/lib/format'
 import { formatTripDate } from '@/lib/whatsapp/messages'
@@ -204,6 +205,7 @@ export function BookingFlow({
         return
       }
       setResult(r)
+      track('booking_request', { package: pkg.slug, whatsapp: r.status })
       save(pkg.slug, null)
       go(4, true)
     })
@@ -225,7 +227,11 @@ export function BookingFlow({
   const travellers = formatTravellers(values.adults, values.children)
 
   return (
-    <div className="container-site flex flex-col gap-6 py-6 md:py-10">
+    <div
+      className="container-site flex flex-col gap-6 py-6 md:py-10"
+      // Set once the form is interactive (tests wait for it before typing).
+      data-ready={hydrated || undefined}
+    >
       <p className="m-0 flex items-center gap-2 text-body-sm text-ink-500">
         <Icon name="check" size={16} />
         Secure booking request · No online payment

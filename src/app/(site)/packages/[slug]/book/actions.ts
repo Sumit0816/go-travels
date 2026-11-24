@@ -9,6 +9,8 @@ import { formatDuration, normalizeIndianMobile } from '@/lib/format'
 import { createRateLimiter } from '@/lib/rate-limit'
 import { bookingVariables, renderBookingMessage } from '@/lib/whatsapp/messages'
 import { bookingMessageInput, dispatchBookingAlert } from '@/lib/whatsapp/send'
+import { reportError } from '@/lib/monitoring'
+import { kickDueRetries } from '@/lib/whatsapp/kick'
 
 export type BookingResult =
   | { status: 'error'; message: string; errors?: BookingErrors }
@@ -51,6 +53,7 @@ export async function submitBooking(raw: Record<string, unknown>): Promise<Booki
   const d = parsed.data
   try {
     const payload = await payloadClient()
+    kickDueRetries(payload)
     const pkg = (
       await payload.find({
         collection: 'packages',
@@ -107,11 +110,11 @@ export async function submitBooking(raw: Record<string, unknown>): Promise<Booki
       const { sent, text } = await dispatchBookingAlert(payload, booking.id)
       return sent ? { status: 'sent', requestId, message: text } : { status: 'failed', requestId }
     } catch (err) {
-      payload.logger.error({ err }, `WhatsApp alert for ${requestId} failed to start`)
+      await reportError(err, 'whatsapp', { requestId })
       return { status: 'failed', requestId }
     }
   } catch (err) {
-    console.error('Booking could not be saved', err)
+    await reportError(err, 'booking-save')
     return {
       status: 'error',
       message:

@@ -88,7 +88,7 @@ export default async function DestinationPage({ params }: Props) {
   const listingHref = `/tours?destination=${slug}`
 
   return (
-    <main>
+    <div>
       <PageHero
         crumbs={[
           { label: 'Home', href: '/' },
@@ -279,6 +279,6 @@ export default async function DestinationPage({ params }: Props) {
           </Link>
         </aside>
       </div>
-    </main>
+    </div>
   )
 }

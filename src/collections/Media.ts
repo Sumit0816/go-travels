@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { adminAccess } from '@/access'
 import { MEDIA_FOLDERS } from '@/lib/catalog'
+import { withRelativeMediaUrls } from '@/lib/media-url'
 import { CACHE_TAGS } from '@/lib/revalidate'
 import { revalidateHooks } from '@/fields'
 
@@ -24,9 +25,15 @@ export const Media: CollectionConfig = {
     ...adminAccess('packages'),
     read: () => true,
   },
-  hooks: revalidateHooks([CACHE_TAGS.media]),
+  hooks: {
+    ...revalidateHooks([CACHE_TAGS.media]),
+    // Serve image URLs as /api/media/file/… paths, whatever domain they were uploaded on.
+    afterRead: [({ doc }) => withRelativeMediaUrls(doc)],
+  },
   upload: {
-    mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/svg+xml'],
+    // No SVG: it can carry scripts and would be served from our own domain. Brand artwork
+    // lives in /public/brand instead.
+    mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
     focalPoint: true,
     crop: true,
     adminThumbnail: 'thumbnail',
