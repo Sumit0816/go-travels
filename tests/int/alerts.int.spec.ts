@@ -16,8 +16,10 @@ import {
   sendTestAlert,
 } from '@/lib/whatsapp/send'
 import type { TeamAlert, WhatsappSetting } from '@/payload-types'
+import { restoreSecrets, snapshotSecrets, type SecretsSnapshot } from '../helpers/secrets'
 
 let payload: Payload
+let secrets: SecretsSnapshot
 let originalWa: WhatsappSetting
 let originalTeam: TeamAlert
 const bookings: number[] = []
@@ -83,6 +85,7 @@ const statusOf = async (id: number) =>
 
 beforeAll(async () => {
   payload = await getPayload({ config: await config })
+  secrets = await snapshotSecrets(payload)
   originalWa = await payload.findGlobal({ slug: 'whatsappSettings', overrideAccess: true })
   originalTeam = await payload.findGlobal({ slug: 'teamAlerts', overrideAccess: true })
   await payload.updateGlobal({
@@ -143,6 +146,7 @@ afterAll(async () => {
     },
     true,
   )
+  await restoreSecrets(payload, secrets)
 })
 
 describe('Telegram and email alerts', () => {
@@ -247,31 +251,52 @@ describe('Telegram and email alerts', () => {
 
 describe('secret fields', () => {
   it('never returns the token or API key on a normal read, and keeps them on save', async () => {
-    const owner = (
-      await payload.find({
-        collection: 'users',
-        where: { role: { equals: 'owner' } },
-        limit: 1,
-        overrideAccess: true,
-      })
-    ).docs[0]!
-    const user = { ...owner, collection: 'users' as const }
-    // What the admin screen and the REST API see.
-    const team = await payload.findGlobal({ slug: 'teamAlerts', user, overrideAccess: false })
-    expect(team.telegramBotToken).toBeUndefined()
-    expect(team.telegramTokenHint).toMatch(/^•••• /)
-    const wa = await payload.findGlobal({ slug: 'whatsappSettings', user, overrideAccess: false })
-    expect(wa.apiKey).toBeUndefined()
-
-    // Saving other fields with the box empty (as the form does) keeps the stored token.
-    await payload.updateGlobal({
-      slug: 'teamAlerts',
-      data: { telegramEnabled: true, telegramBotToken: '' },
-      user,
-      overrideAccess: false,
+    // Its own Owner, so the test works on an empty database (CI) too.
+    const owner = await payload.create({
+      collection: 'users',
+      data: {
+        name: 'Secrets Owner',
+        email: `secrets-owner-${Date.now()}@example.test`,
+        password: `pw-${Math.random().toString(36).slice(2)}-${Date.now()}`,
+        role: 'owner',
+        status: 'active',
+        whatsappAlerts: 'no',
+      },
+      overrideAccess: true,
     })
-    const { telegramToken } = await loadAlertSettings(payload)
-    expect(telegramToken).toBe(TOKEN)
+    const user = { ...owner, collection: 'users' as const }
+    try {
+      // What the admin screen and the REST API see.
+      const team = await payload.findGlobal({ slug: 'teamAlerts', user, overrideAccess: false })
+      expect(team.telegramBotToken).toBeUndefined()
+      expect(team.telegramTokenHint).toMatch(/^•••• /)
+      const wa = await payload.findGlobal({ slug: 'whatsappSettings', user, overrideAccess: false })
+      expect(wa.apiKey).toBeUndefined()
+
+      // Saving other fields with the box empty (as the form does) keeps the stored token.
+      await payload.updateGlobal({
+        slug: 'teamAlerts',
+        data: { telegramEnabled: true, telegramBotToken: '' },
+        user,
+        overrideAccess: false,
+      })
+      const { telegramToken } = await loadAlertSettings(payload)
+      expect(telegramToken).toBe(TOKEN)
+    } finally {
+      await payload.delete({ collection: 'users', id: owner.id, overrideAccess: true })
+    }
+  })
+})
+
+describe('test cleanup', () => {
+  it('restores a saved token exactly (so test runs never wipe real credentials)', async () => {
+    const other = '987654321:AAOtherTokenForRestoreCheck_xyz'
+    await setTeam({ telegramBotToken: other })
+    const snap = await snapshotSecrets(payload)
+    await setTeam({ telegramBotToken: TOKEN })
+    await restoreSecrets(payload, snap)
+    expect((await loadAlertSettings(payload)).telegramToken).toBe(other)
+    await setTeam({ telegramBotToken: TOKEN })
   })
 })
 
@@ -303,23 +328,29 @@ describe('test buttons and group finder', () => {
         ],
       },
     }))
-    const owner = (
-      await payload.find({
-        collection: 'users',
-        where: { role: { equals: 'owner' } },
-        limit: 1,
-        overrideAccess: true,
-      })
-    ).docs[0]
     const anon = await createLocalReq({}, payload)
     expect((await telegramChats.handler(anon)).status).toBe(403)
     expect((await alertTest.handler(anon)).status).toBe(403)
-    if (owner) {
+    const owner = await payload.create({
+      collection: 'users',
+      data: {
+        name: 'Finder Owner',
+        email: `finder-owner-${Date.now()}@example.test`,
+        password: `pw-${Math.random().toString(36).slice(2)}-${Date.now()}`,
+        role: 'owner',
+        status: 'active',
+        whatsappAlerts: 'no',
+      },
+      overrideAccess: true,
+    })
+    try {
       const req = await createLocalReq({ user: { ...owner, collection: 'users' } }, payload)
       const res = await telegramChats.handler(req)
       expect(await res.json()).toEqual({
         chats: [{ id: '-1001234567890', title: 'Go Travels Bookings', type: 'supergroup' }],
       })
+    } finally {
+      await payload.delete({ collection: 'users', id: owner.id, overrideAccess: true })
     }
   })
 

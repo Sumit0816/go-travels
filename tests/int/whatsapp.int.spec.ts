@@ -17,8 +17,10 @@ import {
 } from '@/lib/whatsapp/send'
 import { applyStatusUpdates } from '@/lib/whatsapp/webhook'
 import type { TeamAlert, WhatsappSetting } from '@/payload-types'
+import { restoreSecrets, snapshotSecrets, type SecretsSnapshot } from '../helpers/secrets'
 
 let payload: Payload
+let secrets: SecretsSnapshot
 let original: WhatsappSetting
 let originalTeam: TeamAlert
 const created: { collection: 'bookings' | 'enquiries'; id: number }[] = []
@@ -76,6 +78,7 @@ async function call(endpoint: Endpoint, url: string, init: { body?: unknown; aut
 
 beforeAll(async () => {
   payload = await getPayload({ config: await config })
+  secrets = await snapshotSecrets(payload)
   original = await payload.findGlobal({ slug: 'whatsappSettings', overrideAccess: true })
   originalTeam = await payload.findGlobal({ slug: 'teamAlerts', overrideAccess: true })
   // WhatsApp only, so these tests see just its alerts (Telegram and email: alerts.int.spec.ts).
@@ -140,6 +143,7 @@ afterAll(async () => {
     },
     overrideAccess: true,
   })
+  await restoreSecrets(payload, secrets)
 })
 
 describe('sending', () => {
